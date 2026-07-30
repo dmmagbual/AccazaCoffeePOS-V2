@@ -1,0 +1,22 @@
+{
+  "categories": [
+    { "id": "coffee", "name": "Coffee" },
+    { "id": "milk-tea", "name": "Milk Tea" },
+    { "id": "food", "name": "Food" },
+    { "id": "desserts", "name": "Desserts" },
+    { "id": "tea", "name": "Tea" },
+    { "id": "pastry", "name": "Pastry" },
+    { "id": "retail", "name": "Retail" }
+  ],
+  "products": [
+    { "id": "espresso", "name": "Espresso", "categoryId": "coffee", "price": 120, "sku": "COF-ESP-001", "barcode": "480000000001", "image": "/products/coffee.svg", "stockQuantity": 24, "availability": "available", "favorite": true },
+    { "id": "flat-white", "name": "Flat White", "categoryId": "coffee", "price": 165, "sku": "COF-FLW-001", "barcode": "480000000002", "image": "/products/coffee.svg", "stockQuantity": 18, "availability": "available", "favorite": true },
+    { "id": "iced-latte", "name": "Iced Latte", "categoryId": "coffee", "price": 175, "sku": "COF-ILT-001", "barcode": "480000000003", "image": "/products/coffee.svg", "stockQuantity": 5, "availability": "available", "favorite": true },
+    { "id": "matcha-latte", "name": "Matcha Latte", "categoryId": "tea", "price": 185, "sku": "TEA-MAT-001", "barcode": "480000000004", "image": "/products/tea.svg", "stockQuantity": 13, "availability": "available", "favorite": true },
+    { "id": "americano", "name": "Americano", "categoryId": "coffee", "price": 140, "sku": "COF-AMR-001", "barcode": "480000000005", "image": "/products/coffee.svg", "stockQuantity": 16, "availability": "available", "favorite": false },
+    { "id": "cappuccino", "name": "Cappuccino", "categoryId": "coffee", "price": 170, "sku": "COF-CAP-001", "barcode": "480000000006", "image": "/products/coffee.svg", "stockQuantity": 0, "availability": "unavailable", "favorite": false },
+    { "id": "chai-latte", "name": "Chai Latte", "categoryId": "tea", "price": 180, "sku": "TEA-CHA-001", "barcode": "480000000007", "image": "/products/tea.svg", "stockQuantity": 9, "availability": "available", "favorite": false },
+    { "id": "butter-croissant", "name": "Butter Croissant", "categoryId": "pastry", "price": 95, "sku": "PAS-BCR-001", "barcode": "480000000008", "image": "/products/pastry.svg", "stockQuantity": 4, "availability": "available", "favorite": false },
+    { "id": "house-blend-beans", "name": "House Blend Beans", "categoryId": "retail", "price": 480, "sku": "RET-HBB-001", "barcode": "480000000009", "image": "/products/retail.svg", "stockQuantity": 11, "availability": "available", "favorite": false }
+  ]
+}

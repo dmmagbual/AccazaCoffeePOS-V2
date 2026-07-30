@@ -1,7 +1,16 @@
-import { AlertTriangle, ArrowUpRight, Package, Plus, ShoppingBag, Wallet } from 'lucide-react'
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Button, Card, Page } from '../../../shared/components'
-import { formatCurrency } from '../../../shared/utils'
-const sales = [{ day: 'Mon', sales: 12800 }, { day: 'Tue', sales: 15400 }, { day: 'Wed', sales: 11900 }, { day: 'Thu', sales: 18600 }, { day: 'Fri', sales: 21100 }, { day: 'Sat', sales: 24850 }, { day: 'Sun', sales: 19700 }]
-const metrics = [{ label: "Today's sales", value: formatCurrency(24850), trend: '+12.5%', icon: Wallet }, { label: 'Orders today', value: '86', trend: '+8.2%', icon: ShoppingBag }, { label: 'Average order', value: formatCurrency(289), trend: '+4.1%', icon: ArrowUpRight }, { label: 'Low stock items', value: '4', trend: 'Review now', icon: AlertTriangle }]
-export function DashboardPage() { return <Page eyebrow="Overview" title="Good morning, Danilo." description="Here’s how your coffee house is performing today." action={<Button><Plus size={16} />New order</Button>}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(({ label, value, trend, icon: Icon }) => <Card key={label} className="relative"><Icon className="absolute right-5 top-5 text-emerald-700" size={20} /><p className="text-sm text-slate-500">{label}</p><strong className="mt-3 block text-2xl tracking-tight">{value}</strong><small className="mt-2 block text-xs font-medium text-emerald-700">{trend}</small></Card>)}</div><div className="mt-5 grid gap-5 lg:grid-cols-[1.7fr_1fr]"><Card title="Sales overview" description="Daily sales performance"><div className="h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={sales}><XAxis dataKey="day" axisLine={false} tickLine={false} /><YAxis axisLine={false} tickLine={false} width={45} tickFormatter={(value) => `₱${value / 1000}k`} /><Tooltip formatter={(value) => formatCurrency(Number(value))} cursor={{ fill: '#f1f5f9' }} /><Bar dataKey="sales" fill="#047857" radius={[5, 5, 0, 0]} /></BarChart></ResponsiveContainer></div></Card><Card title="Quick actions" description="Keep your day moving"><div className="grid gap-2">{['Open point of sale', 'Review inventory', 'View sales report'].map((action) => <button className="flex items-center justify-between rounded-lg border border-slate-100 p-3 text-left text-sm font-medium hover:border-emerald-200 hover:bg-emerald-50" key={action}>{action}<ArrowUpRight size={16} className="text-emerald-700" /></button>)}</div></Card></div><Card className="mt-5" title="Recent activity" description="Latest orders and operational updates"><div className="divide-y divide-slate-100">{['Order #ACZ-1048 started by Walk-in customer', 'Maria Santos order is ready for collection', 'Arabica beans stock adjusted by 2kg'].map((activity, index) => <div className="flex items-center gap-3 py-4 text-sm" key={activity}><span className="grid size-8 place-items-center rounded-full bg-emerald-50 text-emerald-700">{index === 2 ? <Package size={15} /> : <ShoppingBag size={15} />}</span><span className="flex-1">{activity}</span><small className="text-slate-400">{index + 1}h ago</small></div>)}</div></Card></Page> }
+import { EmptyState, Page } from '../../../shared/components'
+
+export function DashboardPage() {
+  return (
+    <Page
+      eyebrow="Overview"
+      title="Business dashboard"
+      description="Operational data will appear here when a production data source is connected."
+    >
+      <EmptyState
+        title="No operational data available"
+        description="Connect the approved data source to begin showing live sales, inventory, and activity information."
+      />
+    </Page>
+  )
+}

@@ -1,0 +1,1 @@
+export function generateReceiptNumber(date = new Date(), sequence = 1): string { const stamp = date.toISOString().slice(0, 10).replaceAll('-', ''); return `RCPT-${stamp}-${String(sequence).padStart(4, '0')}` }

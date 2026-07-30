@@ -1,0 +1,8 @@
+export { localProductCatalogService } from './productCatalogService'
+export type { ProductCatalogService } from './productCatalogService'
+export { calculateDiscount } from './discountCalculator'
+export { formatThermalReceipt } from './receiptFormatter'
+export { generateReceiptNumber } from './receiptNumberGenerator'
+export { receiptService } from './receiptService'
+export type { ReceiptDraft, ReceiptService } from './receiptService'
+export { calculateTax } from './taxCalculator'

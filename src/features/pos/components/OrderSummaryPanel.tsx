@@ -1,0 +1,20 @@
+import { ShoppingBag, Tag } from 'lucide-react'
+import { useState } from 'react'
+import { Button, Card } from '../../../shared/components'
+import { selectCartItems, selectCartSummary, useCartStore } from '../stores'
+import { CartLineItem } from './CartLineItem'
+import { PaymentDialog } from './PaymentDialog'
+
+export function OrderSummaryPanel() {
+  const [paymentOpen, setPaymentOpen] = useState(false)
+  const items = useCartStore(selectCartItems)
+  const summary = useCartStore(selectCartSummary)
+  const increaseQuantity = useCartStore((state) => state.increaseQuantity)
+  const decreaseQuantity = useCartStore((state) => state.decreaseQuantity)
+  const removeItem = useCartStore((state) => state.removeItem)
+  const addNote = useCartStore((state) => state.addNote)
+  const clearCart = useCartStore((state) => state.clearCart)
+  const hasItems = summary.itemCount > 0
+
+  return <aside className="xl:sticky xl:top-20 xl:h-[calc(100vh-6.5rem)]"><Card className="flex h-full flex-col"><header className="flex items-center justify-between border-b border-slate-100 p-5"><div className="flex items-center gap-2"><ShoppingBag size={19} className="text-emerald-700" /><h2 className="font-semibold">Current order</h2></div><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{summary.itemCount} items</span></header><div className="min-h-40 flex-1 overflow-y-auto px-5">{hasItems ? <ul className="divide-y divide-slate-100">{items.map((item) => <CartLineItem key={item.product.id} item={item} onIncreaseQuantity={increaseQuantity} onDecreaseQuantity={decreaseQuantity} onRemove={removeItem} onAddNote={addNote} />)}</ul> : <div className="grid min-h-52 place-items-center text-center"><div><ShoppingBag className="mx-auto mb-3 text-slate-300" size={30} /><p className="text-sm font-semibold text-slate-600">Your order is empty</p><p className="mt-1 text-xs text-slate-400">Choose products to start an order.</p></div></div>}</div><footer className="space-y-4 border-t border-slate-100 p-5"><div className="grid gap-2"><div className="flex items-center justify-between text-sm"><span className="text-slate-500">Subtotal</span><strong>₱{summary.subtotal.toFixed(2)}</strong></div><div className="flex items-center justify-between text-sm text-slate-500"><span className="flex items-center gap-2"><Tag size={14} />Discount <small className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase">Placeholder</small></span><span>₱{summary.discount.toFixed(2)}</span></div><div className="flex items-center justify-between text-sm text-slate-500"><span>Tax <small className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase">Placeholder</small></span><span>₱{summary.tax.toFixed(2)}</span></div><div className="flex items-center justify-between border-t border-slate-200 pt-3"><span className="font-semibold">Grand total</span><strong className="text-xl text-emerald-800">₱{summary.grandTotal.toFixed(2)}</strong></div></div><div className="grid grid-cols-2 gap-2"><Button variant="secondary" type="button" disabled>Hold order</Button><Button variant="danger" type="button" disabled={!hasItems} onClick={clearCart}>Clear cart</Button></div><Button className="w-full" type="button" disabled={!hasItems} onClick={() => setPaymentOpen(true)}>Checkout</Button></footer></Card><PaymentDialog open={paymentOpen} onClose={() => setPaymentOpen(false)} due={summary.grandTotal} /></aside>
+}
