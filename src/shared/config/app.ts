@@ -9,4 +9,5 @@ export const ROUTES = {
   dashboard: '/',
   pos: '/pos',
   menuManagement: '/menu-management',
+  masterData: '/master-data',
 } as const

@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Settings2, ShoppingCart } from 'lucide-react'
+import { Building2, Database, LayoutDashboard, Settings2, ShoppingCart } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { APP_CONFIG, ROUTES } from '../shared/config'
 
@@ -26,6 +26,7 @@ export function AppLayout() {
             <ShoppingCart size={18} />Point of Sale
           </NavLink>
           <NavLink to={ROUTES.menuManagement} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Settings2 size={18} />Menu management</NavLink>
+          <NavLink to={ROUTES.masterData} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Database size={18} />Master data</NavLink>
         </nav>
       </aside>
       <section className="min-w-0 flex-1 lg:ml-64">
