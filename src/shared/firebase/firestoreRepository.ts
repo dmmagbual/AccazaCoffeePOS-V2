@@ -1,0 +1,5 @@
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where, type DocumentData, type Firestore } from 'firebase/firestore'
+import type { ScopedRepository } from '../data/firestore/repositories'
+import type { AuditMetadata } from '../data/firestore/types'
+import { documentConverter } from './converter'
+export function createFirestoreRepository<T extends AuditMetadata>(firestore: Firestore, collectionName: string): ScopedRepository<T> { const reference = collection(firestore, collectionName).withConverter(documentConverter<T>()); return { async getById(id) { const snapshot = await getDoc(doc(reference, id)); return snapshot.exists() ? snapshot.data() : null }, async list(organizationId, storeId) { const snapshots = await getDocs(query(reference, where('organizationId', '==', organizationId), where('storeId', '==', storeId))); return snapshots.docs.map((item) => item.data()) }, async create(document) { await setDoc(doc(reference, (document as T & { id?: string }).id), document); return document }, async update(id, updates) { await updateDoc(doc(reference, id), updates as DocumentData) } } }

@@ -1,0 +1,11 @@
+import { z } from 'zod'
+const scope = { organizationId: z.string().min(1), storeId: z.string().min(1), createdBy: z.string().min(1), updatedBy: z.string().min(1), status: z.string().min(1) }
+export const productDocumentSchema = z.object({ ...scope, categoryId: z.string().min(1), name: z.string().min(1), sku: z.string().min(1), barcode: z.string().min(1), sellingPrice: z.number().nonnegative(), cost: z.number().nonnegative(), taxable: z.boolean(), imageUrl: z.string(), favorite: z.boolean(), available: z.boolean(), trackInventory: z.boolean(), minimumStock: z.number().nonnegative(), maximumStock: z.number().nonnegative(), tags: z.array(z.string()) })
+export const categoryDocumentSchema = z.object({ ...scope, name: z.string().min(1), description: z.string(), sortOrder: z.number().int().nonnegative() })
+export const orderDocumentSchema = z.object({ ...scope, orderNumber: z.string().min(1), subtotal: z.number().nonnegative(), discount: z.number().nonnegative(), tax: z.number().nonnegative(), total: z.number().nonnegative(), paymentStatus: z.enum(['unpaid', 'partial', 'paid', 'refunded']) })
+export const paymentDocumentSchema = z.object({ ...scope, orderId: z.string().min(1), method: z.string().min(1), amount: z.number().positive(), reference: z.string().optional() })
+export const inventoryItemDocumentSchema = z.object({ ...scope, quantity: z.number(), minimumStock: z.number().nonnegative(), maximumStock: z.number().nonnegative(), unit: z.string().min(1), lowStock: z.boolean() })
+export const stockMovementDocumentSchema = z.object({ ...scope, inventoryItemId: z.string().min(1), type: z.enum(['purchase', 'sale', 'adjustment', 'waste', 'transfer']), quantity: z.number() })
+export const supplierDocumentSchema = z.object({ ...scope, name: z.string().min(1), contactName: z.string(), email: z.string().email().or(z.literal('')), phone: z.string() })
+export const customerDocumentSchema = z.object({ ...scope, displayName: z.string().min(1), email: z.string().email().optional(), phone: z.string().optional(), searchName: z.string().min(1) })
+export const userProfileDocumentSchema = z.object({ ...scope, email: z.string().email(), displayName: z.string().min(1), roleIds: z.array(z.string()), active: z.boolean() })
