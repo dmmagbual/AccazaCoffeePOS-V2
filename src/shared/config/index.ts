@@ -1,1 +1,1 @@
-export { appConfig } from './app'
+export { APP_CONFIG, COLLECTIONS, ROUTES } from './app'

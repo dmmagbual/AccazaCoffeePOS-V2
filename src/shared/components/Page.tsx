@@ -1,0 +1,3 @@
+import type { ReactNode } from 'react'
+type Props = { title: string; description: string; eyebrow?: string; action?: ReactNode; children: ReactNode }
+export function Page({ title, description, eyebrow, action, children }: Props) { return <><header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div>{eyebrow && <p className="mb-2 text-xs font-bold uppercase tracking-widest text-emerald-700">{eyebrow}</p>}<h1 className="font-serif text-3xl tracking-tight text-slate-950">{title}</h1><p className="mt-2 text-sm text-slate-500">{description}</p></div>{action}</header>{children}</> }

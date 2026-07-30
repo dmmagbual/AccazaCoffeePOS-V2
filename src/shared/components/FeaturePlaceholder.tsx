@@ -1,2 +1,3 @@
+import { EmptyState, Page } from '.'
 type Props = { title: string; description: string }
-export function FeaturePlaceholder({ title, description }: Props) { return <section className="placeholder-page"><p className="eyebrow">Coming next</p><h1>{title}</h1><p>{description}</p></section> }
+export function FeaturePlaceholder({ title, description }: Props) { return <Page eyebrow="Module" title={title} description={description}><EmptyState title={`${title} is ready for implementation`} description="The module boundary, route, and shared platform services are in place." /></Page> }
