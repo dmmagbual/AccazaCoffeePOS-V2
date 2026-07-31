@@ -18,7 +18,10 @@ export interface PurchaseOrderDocument extends AuditMetadata { supplierId: Docum
 export interface CustomerDocument extends AuditMetadata { displayName: string; email?: string; phone?: string; searchName: string }
 export interface LoyaltyAccountDocument extends AuditMetadata { customerId: DocumentId; points: number; tier: string }
 export interface OrderDocument extends AuditMetadata { orderNumber: string; customerId?: DocumentId; subtotal: number; discount: number; tax: number; total: number; paymentStatus: 'unpaid' | 'partial' | 'paid' | 'refunded' }
-export interface OrderItemDocument extends AuditMetadata { orderId: DocumentId; productId: DocumentId; recipeId?: DocumentId; recipeVersionId?: DocumentId; name: string; quantity: number; unitPrice: number; total: number }
+export interface OrderItemIngredientSnapshotDocument { ingredientId: DocumentId; ingredientName: string; baseUnitQuantity: number; baseUnitCost: number; lineCost: number; source: 'recipe' | 'modifier' }
+export interface OrderItemModifierSnapshotDocument { modifierId: DocumentId; name: string; sellingPriceAdjustment: number; ingredientCost: number; ingredients: readonly OrderItemIngredientSnapshotDocument[]; inventoryDeductionReady: boolean }
+export interface OrderItemRecipeSnapshotDocument { productId: DocumentId; productName: string; productPrice: number; recipeId: DocumentId | null; recipeVersionId: DocumentId | null; recipeVersionNumber: number | null; ingredients: readonly OrderItemIngredientSnapshotDocument[]; modifiers: readonly OrderItemModifierSnapshotDocument[]; ingredientCost: number; modifierCost: number; totalEstimatedCogs: number; saleTimestamp: Timestamp }
+export interface OrderItemDocument extends AuditMetadata { orderId: DocumentId; productId: DocumentId; recipeId?: DocumentId; recipeVersionId?: DocumentId; operationalSnapshot?: OrderItemRecipeSnapshotDocument; name: string; quantity: number; unitPrice: number; total: number }
 export interface PaymentDocument extends AuditMetadata { orderId: DocumentId; method: string; amount: number; reference?: string; paidAt: Timestamp }
 export interface ReceiptDocument extends AuditMetadata { orderId: DocumentId; receiptNumber: string; total: number; issuedAt: Timestamp }
 export interface ShiftDocument extends AuditMetadata { userId: DocumentId; openedAt: Timestamp; closedAt?: Timestamp }
