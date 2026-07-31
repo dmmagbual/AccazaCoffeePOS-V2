@@ -13,6 +13,8 @@ export const router = createBrowserRouter([
       { path: ROUTES.masterData.slice(1), lazy: async () => ({ Component: (await import('../../features/master-data')).MasterDataPage }) },
       { path: ROUTES.ingredients.slice(1), lazy: async () => ({ Component: (await import('../../features/ingredients')).IngredientManagementPage }) },
       { path: ROUTES.recipes.slice(1), lazy: async () => ({ Component: (await import('../../features/recipes')).RecipeManagementPage }) },
+      { path: ROUTES.operations.slice(1), lazy: async () => ({ Component: (await import('../../features/operations')).StoreOperationsPage }) },
+      { path: ROUTES.procurement.slice(1), lazy: async () => ({ Component: (await import('../../features/procurement')).ProcurementPage }) },
     ],
   },
 ])

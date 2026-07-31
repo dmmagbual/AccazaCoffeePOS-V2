@@ -12,4 +12,6 @@ export const ROUTES = {
   masterData: '/master-data',
   ingredients: '/ingredients',
   recipes: '/recipes',
+  operations: '/operations',
+  procurement: '/procurement',
 } as const

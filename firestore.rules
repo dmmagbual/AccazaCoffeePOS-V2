@@ -6,7 +6,7 @@ service cloud.firestore {
     function sameStore(storeId) { return request.auth.token.storeIds.hasAny([storeId]); }
     function can(permission) { return signedIn() && request.auth.token.permissions.hasAny([permission]); }
     function validScope(data) { return sameOrg(data.organizationId) && sameStore(data.storeId); }
-    function nonFinancialCollection(collection) { return collection != 'payments' && collection != 'receipts' && collection != 'cashDrawers' && collection != 'expenses' && collection != 'orders'; }
+    function nonFinancialCollection(collection) { return collection != 'payments' && collection != 'receipts' && collection != 'cashDrawers' && collection != 'expenses' && collection != 'orders' && collection != 'suppliers' && collection != 'purchaseOrders' && collection != 'goodsReceipts' && collection != 'inventoryBatches' && collection != 'purchaseDocuments'; }
     match /{collection}/{id} {
       allow read: if validScope(resource.data);
       allow create: if nonFinancialCollection(collection) && validScope(request.resource.data) && request.resource.data.createdBy == request.auth.uid && request.resource.data.updatedBy == request.auth.uid;
@@ -36,6 +36,11 @@ service cloud.firestore {
     }
     match /{collection=payments|receipts|cashDrawers|expenses}/{id} { allow write: if can('finance.write'); }
     match /orders/{id} { allow write: if can('sales.write'); }
+    match /suppliers/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.manage'); }
+    match /purchaseOrders/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.manage'); }
+    match /goodsReceipts/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.receive'); }
+    match /inventoryBatches/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.receive'); }
+    match /purchaseDocuments/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.manage'); }
     match /{collection=users|roles|permissions}/{id} { allow write: if can('identity.manage'); }
   }
 }
