@@ -6,10 +6,11 @@ service cloud.firestore {
     function sameStore(storeId) { return request.auth.token.storeIds.hasAny([storeId]); }
     function can(permission) { return signedIn() && request.auth.token.permissions.hasAny([permission]); }
     function validScope(data) { return sameOrg(data.organizationId) && sameStore(data.storeId); }
+    function nonFinancialCollection(collection) { return collection != 'payments' && collection != 'receipts' && collection != 'cashDrawers' && collection != 'expenses' && collection != 'orders'; }
     match /{collection}/{id} {
       allow read: if validScope(resource.data);
-      allow create: if validScope(request.resource.data) && request.resource.data.createdBy == request.auth.uid && request.resource.data.updatedBy == request.auth.uid;
-      allow update: if validScope(resource.data) && validScope(request.resource.data) && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy && request.resource.data.updatedBy == request.auth.uid;
+      allow create: if nonFinancialCollection(collection) && validScope(request.resource.data) && request.resource.data.createdBy == request.auth.uid && request.resource.data.updatedBy == request.auth.uid;
+      allow update: if nonFinancialCollection(collection) && validScope(resource.data) && validScope(request.resource.data) && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if can('admin.delete');
     }
     // Ingredients are organization-controlled master data, not store-owned inventory.
@@ -34,6 +35,7 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /{collection=payments|receipts|cashDrawers|expenses}/{id} { allow write: if can('finance.write'); }
+    match /orders/{id} { allow write: if can('sales.write'); }
     match /{collection=users|roles|permissions}/{id} { allow write: if can('identity.manage'); }
   }
 }

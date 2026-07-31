@@ -1,0 +1,31 @@
+import { describe, expect, it } from 'vitest'
+import { localOperationalIntegration } from './operational'
+import { completeSale } from './sales'
+import { calculateCartSummary } from '../features/pos/stores/cartStore'
+import { calculateDiscount } from '../features/pos/services/discountCalculator'
+import { calculateTax } from '../features/pos/services/taxCalculator'
+import { getPaymentSummary } from '../features/pos/stores/paymentStore'
+import { calculateRecipeCost, convertRecipeQuantityToBase } from '../features/recipes/services'
+import { localIngredientUnits } from '../features/ingredients/data/localIngredients'
+import type { Product } from '../features/pos/domain'
+
+const product: Product = { id: 'americano', name: 'Americano', description: '', category: { id: 'coffee', name: 'Coffee', description: '', active: true }, sku: 'COF-AMR-001', barcode: '480000000005', favorite: false, available: true, modifiers: [], variants: [], inventory: { trackInventory: false, stockQuantity: 0, minimumStock: 0, maximumStock: 0, unit: 'serving' }, pricing: { cost: 0, sellingPrice: 140, currency: 'PHP' }, tax: { taxable: true, taxRate: 0 }, image: { url: '', alt: '' }, size: '', unit: 'serving', tags: [], status: 'active' }
+const cartItem = { product, quantity: 1, note: '', itemTotal: 140 }
+
+describe('POS financial calculations', () => {
+  it('calculates cart totals, discount, and tax', () => { expect(calculateCartSummary([cartItem], 0.1, { type: 'percentage', value: 10 })).toEqual({ itemCount: 1, subtotal: 140, discount: 14, tax: 12.6, grandTotal: 138.6 }); expect(calculateDiscount(100, { type: 'fixed', value: 200 })).toBe(100); expect(calculateTax(100, 0.12)).toBe(12) })
+  it('calculates cash change and split-payment balances', () => { expect(getPaymentSummary({ due: 100, payments: [{ id: 'cash', method: 'cash', amount: 120 }], addPayment: () => undefined, removePayment: () => undefined, setDue: () => undefined, clearPayments: () => undefined })).toMatchObject({ paid: 120, balance: 0, change: 20 }); expect(getPaymentSummary({ due: 100, payments: [{ id: 'cash', method: 'cash', amount: 40 }, { id: 'card', method: 'credit_card', amount: 60 }], addPayment: () => undefined, removePayment: () => undefined, setDue: () => undefined, clearPayments: () => undefined })).toMatchObject({ paid: 100, balance: 0, change: 0 }) })
+})
+
+describe('Recipe and operational resolution', () => {
+  it('converts compatible units and calculates recipe cost', () => { const kilogram = localIngredientUnits.find((unit) => unit.id === 'kilogram')!; const gram = localIngredientUnits.find((unit) => unit.id === 'gram')!; expect(convertRecipeQuantityToBase(1, kilogram, gram)).toBe(1000); expect(() => convertRecipeQuantityToBase(1, localIngredientUnits.find((unit) => unit.id === 'piece')!, gram)).toThrow(); expect(calculateRecipeCost([{ ingredientId: 'bean', ingredientNameSnapshot: 'Bean', quantity: 10, unitId: 'gram', baseUnitQuantity: 10, baseUnitCostSnapshot: 0.5, lineCost: 5, optional: false, notes: '', sortOrder: 0 }], 1, 10)).toMatchObject({ ingredientCost: 5, wasteCost: 0.5, totalCost: 5.5, costPerServing: 5.5 }) })
+  it('resolves a published recipe and preserves immutable snapshots', () => { const snapshot = localOperationalIntegration.buildOrderItemRecipeSnapshot(product, [], new Date()); expect(snapshot.recipeVersionId).toBe('recipe-americano-v1'); expect(snapshot.totalEstimatedCogs).toBeGreaterThan(0); const next = localOperationalIntegration.buildOrderItemRecipeSnapshot(product, [], new Date()); expect(snapshot).not.toBe(next); expect(snapshot.ingredients).toEqual(next.ingredients) })
+})
+
+describe('Complete sale use case', () => {
+  const dependencies = { validateOrder: localOperationalIntegration.validateOrderOperationalReadiness, buildSnapshot: localOperationalIntegration.buildOrderItemRecipeSnapshot, business: { name: 'Accaza', address: '', tin: '', footerMessage: '' } }
+  it('completes a cash sale with change and persists once', async () => { let saved = 0; const result = await completeSale({ organizationId: 'org', storeId: 'store', cashierId: 'cashier', items: [cartItem], discount: null, taxRate: 0, payments: [{ id: 'cash-1', method: 'cash', amount: 200 }], saleTimestamp: new Date() }, { ...dependencies, persistence: { async saveCompletedSale() { saved += 1 } } }); expect(result.success).toBe(true); if (result.success) expect(result.change).toBe(60); expect(saved).toBe(1) })
+  it('rejects underpayment and preserves persistence', async () => { let saved = 0; const result = await completeSale({ organizationId: 'org', storeId: 'store', cashierId: 'cashier', items: [cartItem], discount: null, taxRate: 0, payments: [{ id: 'cash-2', method: 'cash', amount: 100 }], saleTimestamp: new Date() }, { ...dependencies, persistence: { async saveCompletedSale() { saved += 1 } } }); expect(result).toMatchObject({ success: false, error: { code: 'payment_mismatch' } }); expect(saved).toBe(0) })
+  it('returns a recoverable failure when persistence fails', async () => { const result = await completeSale({ organizationId: 'org', storeId: 'store', cashierId: 'cashier', items: [cartItem], discount: null, taxRate: 0, payments: [{ id: 'cash-3', method: 'cash', amount: 140 }], saleTimestamp: new Date() }, { ...dependencies, persistence: { async saveCompletedSale() { throw new Error('unavailable') } } }); expect(result).toMatchObject({ success: false, error: { code: 'persistence_error', recoverable: true } }) })
+  it('prevents concurrent duplicate submissions', async () => { let release: (() => void) | undefined; const gate = new Promise<void>((resolve) => { release = resolve }); const input = { organizationId: 'org', storeId: 'store', cashierId: 'cashier', items: [cartItem], discount: null, taxRate: 0, payments: [{ id: 'cash-4', method: 'cash' as const, amount: 140 }], saleTimestamp: new Date() }; const first = completeSale(input, { ...dependencies, persistence: { async saveCompletedSale() { await gate } } }); const duplicate = await completeSale(input, { ...dependencies, persistence: { async saveCompletedSale() { await gate } } }); expect(duplicate).toMatchObject({ success: false, error: { code: 'duplicate_submission' } }); release?.(); await first })
+})
