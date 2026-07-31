@@ -11,4 +11,5 @@ export const ROUTES = {
   menuManagement: '/menu-management',
   masterData: '/master-data',
   ingredients: '/ingredients',
+  recipes: '/recipes',
 } as const

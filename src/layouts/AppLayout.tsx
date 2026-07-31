@@ -1,4 +1,4 @@
-import { Building2, Database, LayoutDashboard, Settings2, ShoppingCart, Wheat } from 'lucide-react'
+import { BookOpenCheck, Building2, Database, LayoutDashboard, Settings2, ShoppingCart, Wheat } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { APP_CONFIG, ROUTES } from '../shared/config'
 
@@ -28,6 +28,7 @@ export function AppLayout() {
           <NavLink to={ROUTES.menuManagement} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Settings2 size={18} />Menu management</NavLink>
           <NavLink to={ROUTES.masterData} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Database size={18} />Master data</NavLink>
           <NavLink to={ROUTES.ingredients} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Wheat size={18} />Ingredients</NavLink>
+          <NavLink to={ROUTES.recipes} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><BookOpenCheck size={18} />Recipes</NavLink>
         </nav>
       </aside>
       <section className="min-w-0 flex-1 lg:ml-64">

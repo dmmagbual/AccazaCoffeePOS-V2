@@ -18,7 +18,7 @@ export interface PurchaseOrderDocument extends AuditMetadata { supplierId: Docum
 export interface CustomerDocument extends AuditMetadata { displayName: string; email?: string; phone?: string; searchName: string }
 export interface LoyaltyAccountDocument extends AuditMetadata { customerId: DocumentId; points: number; tier: string }
 export interface OrderDocument extends AuditMetadata { orderNumber: string; customerId?: DocumentId; subtotal: number; discount: number; tax: number; total: number; paymentStatus: 'unpaid' | 'partial' | 'paid' | 'refunded' }
-export interface OrderItemDocument extends AuditMetadata { orderId: DocumentId; productId: DocumentId; name: string; quantity: number; unitPrice: number; total: number }
+export interface OrderItemDocument extends AuditMetadata { orderId: DocumentId; productId: DocumentId; recipeId?: DocumentId; recipeVersionId?: DocumentId; name: string; quantity: number; unitPrice: number; total: number }
 export interface PaymentDocument extends AuditMetadata { orderId: DocumentId; method: string; amount: number; reference?: string; paidAt: Timestamp }
 export interface ReceiptDocument extends AuditMetadata { orderId: DocumentId; receiptNumber: string; total: number; issuedAt: Timestamp }
 export interface ShiftDocument extends AuditMetadata { userId: DocumentId; openedAt: Timestamp; closedAt?: Timestamp }
