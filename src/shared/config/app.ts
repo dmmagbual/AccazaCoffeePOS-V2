@@ -10,4 +10,5 @@ export const ROUTES = {
   pos: '/pos',
   menuManagement: '/menu-management',
   masterData: '/master-data',
+  ingredients: '/ingredients',
 } as const

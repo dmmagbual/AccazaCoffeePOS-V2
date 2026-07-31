@@ -12,6 +12,13 @@ service cloud.firestore {
       allow update: if validScope(resource.data) && validScope(request.resource.data) && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if can('admin.delete');
     }
+    // Ingredients are organization-controlled master data, not store-owned inventory.
+    match /ingredients/{id} {
+      allow read: if sameOrg(resource.data.organizationId);
+      allow create: if sameOrg(request.resource.data.organizationId) && can('ingredients.manage') && request.resource.data.createdBy == request.auth.uid && request.resource.data.updatedBy == request.auth.uid;
+      allow update: if sameOrg(resource.data.organizationId) && sameOrg(request.resource.data.organizationId) && can('ingredients.manage') && resource.data.organizationId == request.resource.data.organizationId && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
     match /{collection=payments|receipts|cashDrawers|expenses}/{id} { allow write: if can('finance.write'); }
     match /{collection=users|roles|permissions}/{id} { allow write: if can('identity.manage'); }
   }

@@ -11,7 +11,6 @@ export interface CategoryDocument extends AuditMetadata { name: string; descript
 export interface ProductDocument extends AuditMetadata { categoryId: DocumentId; name: string; description: string; sku: string; barcode: string; sellingPrice: number; cost: number; taxable: boolean; imageUrl: string; favorite: boolean; available: boolean; trackInventory: boolean; minimumStock: number; maximumStock: number; tags: readonly string[] }
 export interface ModifierDocument extends AuditMetadata { name: string; options: readonly string[]; required: boolean }
 export interface RecipeDocument extends AuditMetadata { productId: DocumentId; lines: readonly { ingredientId: DocumentId; quantity: number; unit: string }[] }
-export interface IngredientDocument extends AuditMetadata { name: string; unit: string; costPerUnit: number }
 export interface InventoryItemDocument extends AuditMetadata { productId?: DocumentId; ingredientId?: DocumentId; quantity: number; minimumStock: number; maximumStock: number; unit: string; lowStock: boolean }
 export interface StockMovementDocument extends AuditMetadata { inventoryItemId: DocumentId; type: 'purchase' | 'sale' | 'adjustment' | 'waste' | 'transfer'; quantity: number; occurredAt: Timestamp; referenceId?: DocumentId }
 export interface SupplierDocument extends AuditMetadata { name: string; contactName: string; email: string; phone: string }
