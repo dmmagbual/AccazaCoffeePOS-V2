@@ -5,6 +5,7 @@ import { CustomerRepository, LoyaltyBalanceRepository, LoyaltyTransactionReposit
 import { ShiftTotalsRepository } from '../shifts/index.js';
 import { saleOutboxEventId } from '../outbox/index.js';
 import { PaymentMethodRepository } from '../payments/index.js';
+export const salePersistenceStages = ['afterIdempotencyClaim', 'afterSaleDocument', 'afterReceiptCreation', 'afterPaymentPersistence', 'afterFifoAllocation', 'afterSaleConsumptionCreation', 'afterInventoryBalanceMutation', 'afterCogsPersistence', 'afterJournalCreation', 'afterLoyaltyPersistence', 'afterShiftTotals', 'afterAuditCreation', 'afterOutboxPersistence', 'beforeCommit'];
 const round = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 const hash = (value) => JSON.stringify(value);
 const decimalRatio = (value) => { const [whole, fraction = ''] = value.split('.'); const digits = `${whole}${fraction}`; return [BigInt(digits || '0'), 10n ** BigInt(fraction.length)]; };
@@ -31,8 +32,10 @@ const assertRequest = (input) => {
 };
 export class FirestoreTrustedSaleRepository {
     db;
-    constructor(db) {
+    options;
+    constructor(db, options = {}) {
         this.db = db;
+        this.options = options;
     }
     async execute(command, context, resolved) {
         assertRequest(command);
@@ -49,6 +52,7 @@ export class FirestoreTrustedSaleRepository {
         const shiftTotals = new ShiftTotalsRepository(this.db);
         const journal = new JournalRepository(this.db);
         return this.db.runTransaction(async (transaction) => {
+            const checkpoint = async (stage) => { await this.options.onPersistenceStage?.(stage); };
             const existing = await transaction.get(claim);
             if (existing.exists) {
                 const data = existing.data();
@@ -104,6 +108,8 @@ export class FirestoreTrustedSaleRepository {
             catch {
                 throw new HttpsError('failed-precondition', 'Inventory is insufficient and negative inventory is prohibited.');
             }
+            ;
+            await checkpoint('afterFifoAllocation');
             const saleRef = this.db.collection('orders').doc(saleId);
             const receiptRef = this.db.collection('receipts').doc(saleId);
             const summaryRef = this.db.collection('cashierSaleSummaries').doc(saleId);
@@ -155,24 +161,38 @@ export class FirestoreTrustedSaleRepository {
                     transaction.set(this.db.collection('loyaltyPostingRequests').doc(saleOutboxEventId('SaleLoyaltyRequested', saleId)), { id: saleOutboxEventId('SaleLoyaltyRequested', saleId), organizationId: context.organizationId, branchId: command.requestedBranchId, saleId, status: 'PENDING', attemptCount: 0, nextRetryAt: context.requestTimestamp, createdAt: context.requestTimestamp, updatedAt: context.requestTimestamp });
                 }
             }
+            ;
+            await checkpoint('afterLoyaltyPersistence');
             if (financeInstruction)
                 financeJournalId = journal.createBalanced(transaction, financeInstruction, context.requestTimestamp);
+            await checkpoint('afterJournalCreation');
             transaction.set(claim, { idempotencyKey: command.idempotencyKey, organizationId: context.organizationId, branchId: command.requestedBranchId, requestHash, commandType: 'COMPLETE_SALE', status: 'CLAIMED', claimedAt: context.requestTimestamp, leaseExpiresAt, correlationId: context.correlationId }, { merge: true });
             transaction.set(counter, { nextNumber: nextNumber + 1, updatedAt: context.requestTimestamp }, { merge: true });
+            await checkpoint('afterIdempotencyClaim');
             transaction.set(saleRef, { id: saleId, organizationId: context.organizationId, storeId: command.requestedBranchId, shiftId: command.shiftId, cashierUserId: context.authenticatedUserId, employeeId: context.employeeId, receiptNumber, idempotencyKey: command.idempotencyKey, correlationId: context.correlationId, status: 'COMPLETED', immutable: true, createdAt: context.requestTimestamp, completedAt: context.requestTimestamp, grossAmount: round(lineTotals.reduce((sum, line) => sum + line.gross, 0)), discountAmount: 0, taxAmount: taxTotal, grandTotal, confirmedCogs, provisionalCogs, estimatedCogs, cogsStatus, financeStatus, financeJournalId, loyaltyStatus, loyaltySnapshot, lines: lineTotals.map(({ line, gross, net, taxSnapshot, optionTaxSnapshots }, index) => ({ id: `${saleId}-L${index + 1}`, productSnapshot: line.product, categorySnapshot: line.category, variationSnapshot: line.variation ?? null, recipeSnapshot: line.recipe ?? null, optionSnapshots: line.options, quantity: line.quantity, unitPrice: line.unitPrice, grossAmount: gross, discountAmount: 0, netAmount: net, taxSnapshot, optionTaxSnapshots })) });
+            await checkpoint('afterSaleDocument');
+            await checkpoint('afterCogsPersistence');
             let movementIndex = 0;
             inventory.results.forEach(({ input, result }) => { result.updatedBatches.forEach((batch) => transaction.set(this.db.collection('inventoryBatches').doc(batch.id), { remainingQuantity: batch.remainingQuantity, status: batch.status, updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId }, { merge: true })); transaction.set(this.db.collection('inventoryBalances').doc(`${command.requestedBranchId}_${input.request.ingredientId}`), { ...result.resultingBalance, updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId }, { merge: true }); result.batchAllocations.forEach((allocation) => { movementIndex += 1; transaction.set(this.db.collection('stockMovements').doc(`${saleId}-C${movementIndex}`), { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, saleLineId: input.metadata?.saleLineId ?? null, ingredientId: input.request.ingredientId, batchId: allocation.inventoryBatchId, quantity: allocation.quantity, baseUnitId: allocation.unitId, unitCost: allocation.unitCost, totalCost: allocation.totalCost, provisional: false, movementType: 'SALE_CONSUMPTION', movementTimestamp: context.requestTimestamp, actorUserId: context.authenticatedUserId, correlationId: context.correlationId, immutable: true }); }); if (result.negativeAllocation) {
                 movementIndex += 1;
                 transaction.set(this.db.collection('stockMovements').doc(`${saleId}-C${movementIndex}`), { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, saleLineId: input.metadata?.saleLineId ?? null, ingredientId: input.request.ingredientId, batchId: null, quantity: result.negativeAllocation.quantity, baseUnitId: result.negativeAllocation.unitId, unitCost: result.negativeAllocation.estimatedUnitCost, totalCost: result.negativeAllocation.estimatedTotalCost, provisional: true, movementType: 'SALE_CONSUMPTION', movementTimestamp: context.requestTimestamp, actorUserId: context.authenticatedUserId, correlationId: context.correlationId, reconciliationExposure: result.negativeAllocation, immutable: true });
             } });
+            await checkpoint('afterSaleConsumptionCreation');
+            await checkpoint('afterInventoryBalanceMutation');
             persistedPayments.forEach((payment, index) => transaction.set(paymentRefs[index], { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, paymentMethodId: payment.snapshot.paymentMethodId, paymentMethodCode: payment.snapshot.code, paymentMethodName: payment.snapshot.name, paymentMethodSnapshot: payment.snapshot, amount: payment.amount, currencyCode: payment.snapshot.currencyCode ?? command.payments[index]?.currencyCode, transactionReference: payment.transactionReference, tenderedAmount: payment.tenderedAmount, changeAmount: payment.changeAmount, settlementCategory: payment.snapshot.settlementCategory, financialAccountId: payment.snapshot.financialAccountId ?? null, correlationId: context.correlationId, immutable: true, createdAt: context.requestTimestamp }));
+            await checkpoint('afterPaymentPersistence');
             transaction.set(receiptRef, { id: saleId, organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, receiptNumber, issuedAt: context.requestTimestamp, cashierUserId: context.authenticatedUserId, lines: lineTotals.map(({ line, gross, tax, net, taxSnapshot, optionTaxSnapshots }) => ({ product: line.product, variation: line.variation ?? null, options: line.options, quantity: line.quantity, grossAmount: gross, taxAmount: tax, netAmount: net, taxSnapshot, optionTaxSnapshots })), payments: persistedPayments.map((payment) => ({ paymentMethodId: payment.snapshot.paymentMethodId, paymentMethodCode: payment.snapshot.code, paymentMethodName: payment.snapshot.name, amount: payment.amount, currencyCode: payment.snapshot.currencyCode ?? null, transactionReference: payment.transactionReference, tenderedAmount: payment.tenderedAmount, changeAmount: payment.changeAmount, settlementCategory: payment.snapshot.settlementCategory })), taxAmount: taxTotal, grandTotal, changeAmount, immutable: true });
+            await checkpoint('afterReceiptCreation');
             transaction.set(summaryRef, { id: saleId, organizationId: context.organizationId, branchId: command.requestedBranchId, shiftId: command.shiftId, saleId, receiptNumber, completedAt: context.requestTimestamp, cashierUserId: context.authenticatedUserId, employeeId: context.employeeId ?? null, lines: lineTotals.map(({ line, net }) => ({ productName: line.product.productName, variationName: line.variation?.variationName ?? null, selectedOptionNames: line.options.map((option) => option.optionItemName), quantity: line.quantity, lineTotal: net })), subtotal: round(lineTotals.reduce((sum, line) => sum + line.gross, 0)), discountTotal: 0, taxCode: lineTotals.length === 1 ? lineTotals[0].line.tax.taxCode : 'MIXED', taxRateApplied: lineTotals.length === 1 ? lineTotals[0].line.tax.rateApplied : null, taxAmount: taxTotal, total: grandTotal, payments: persistedPayments.map((payment) => ({ methodName: payment.snapshot.name, amount: payment.amount })), status: 'COMPLETED', correlationId: context.correlationId, createdAt: context.requestTimestamp, updatedAt: context.requestTimestamp, immutable: true });
             transaction.set(auditRef, { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, receiptNumber, actorUserId: context.authenticatedUserId, employeeId: context.employeeId ?? null, shiftId: command.shiftId, idempotencyKey: command.idempotencyKey, correlationId: context.correlationId, event: 'SaleCompleted', occurredAt: context.requestTimestamp, immutable: true });
+            await checkpoint('afterAuditCreation');
             transaction.set(outboxRef, { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, correlationId: context.correlationId, eventType: 'SaleCompleted', status: 'PENDING', createdAt: context.requestTimestamp, idempotencyKey: command.idempotencyKey });
+            await checkpoint('afterOutboxPersistence');
             await shiftTotals.applyCommittedSaleOnce(transaction, this.db.collection('shiftTotals').doc(command.shiftId), { saleId, organizationId: context.organizationId, branchId: command.requestedBranchId, shiftId: command.shiftId, currencyCode: resolved.currencyCode, grossSales: round(lineTotals.reduce((sum, line) => sum + line.gross, 0)), discounts: 0, netSales: grandTotal - taxTotal, tax: taxTotal, confirmedCogs, provisionalCogs, payments: persistedPayments.map((payment) => ({ amount: payment.amount, settlementCategory: payment.snapshot.settlementCategory })) }, context.requestTimestamp, appliedShiftMarker.exists);
+            await checkpoint('afterShiftTotals');
             const result = { saleId, receiptNumber, grandTotal, taxTotal, changeAmount, correlationId: context.correlationId, cogsStatus };
             transaction.set(claim, { status: 'COMPLETED', saleId, resultSnapshot: result, completedAt: context.requestTimestamp, leaseExpiresAt: null }, { merge: true });
+            await checkpoint('beforeCommit');
             return result;
         });
     }

@@ -3,7 +3,7 @@ import { BranchAuthorizationRepository } from './authorization/index.js';
 import { CategoryRepository, OptionGroupRepository, OptionItemRepository, ProductOptionAssignmentRepository, ProductRepository, VariationRepository } from './catalog/index.js';
 import { PaymentMethodRepository } from './payments/index.js';
 import { RecipeRepository } from './recipes/index.js';
-import { FirestoreTrustedSaleRepository } from './sales/completeSale.js';
+import { FirestoreTrustedSaleRepository, salePersistenceStages } from './sales/completeSale.js';
 import { TrustedSaleInputResolver } from './sales/trustedSaleInputResolver.js';
 import { getAdminFirestore } from './shared/admin.js';
 import { correlationId, requestContext } from './shared/requestContext.js';
@@ -29,7 +29,10 @@ export const completeSale = onCall({ region: 'asia-southeast1' }, async (request
         const tax = new TaxResolver(new TaxRepository(db));
         const payments = new PaymentMethodRepository(db);
         const resolved = await new TrustedSaleInputResolver(authorization, categories, products, variations, assignments, groups, options, recipes, tax, payments).resolveTrustedSaleInput({ branchId: data.requestedBranchId, lines: data.cartLines.map((line) => ({ productId: line.productId, variationId: line.variationId, quantity: line.quantity, selectedOptionItemIds: line.selectedOptionItemIds, notes: line.notes })), paymentMethodIds: data.payments.map((payment) => payment.paymentMethodId), customerId: data.customerId, notes: data.notes }, context);
-        return await new FirestoreTrustedSaleRepository(db).execute(data, context, resolved);
+        const injectedStage = process.env.FUNCTIONS_EMULATOR === 'true' && typeof request.auth?.token.testFailurePoint === 'string' && salePersistenceStages.includes(request.auth.token.testFailurePoint) ? request.auth.token.testFailurePoint : undefined;
+        const executionOptions = injectedStage ? { onPersistenceStage: (stage) => { if (stage === injectedStage)
+                throw new HttpsError('internal', 'Controlled emulator persistence failure.'); } } : undefined;
+        return await new FirestoreTrustedSaleRepository(db, executionOptions).execute(data, context, resolved);
     }
     catch (error) {
         throw mapCallableError(error, requestCorrelationId);
