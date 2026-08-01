@@ -1,0 +1,15 @@
+import { BookOpenCheck, Building2, Landmark, Package, ShieldCheck, SlidersHorizontal, UsersRound } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Card, Page } from '../../../shared/components'
+import { ROUTES } from '../../../shared/config'
+
+const groups = [
+  { title: 'Business', description: 'Business profile, organization, branches, taxes, units, payment methods, and feature configuration.', icon: Building2, links: [{ label: 'Business profile', to: ROUTES.businessSetup }, { label: 'Platform configuration', to: ROUTES.platformConfiguration }, { label: 'Master data', to: ROUTES.masterData }] },
+  { title: 'Products & Recipes', description: 'Central product, ingredient, recipe, modifier, and cost configuration.', icon: Package, links: [{ label: 'Products', to: ROUTES.menuManagement }, { label: 'Ingredients', to: ROUTES.ingredients }, { label: 'Recipe builder', to: ROUTES.recipes }] },
+  { title: 'Inventory', description: 'Storage configuration, batches, procurement, and branch transfer foundations.', icon: SlidersHorizontal, links: [{ label: 'Inventory configuration', to: ROUTES.platformConfiguration }, { label: 'Procurement', to: ROUTES.procurement }, { label: 'Branch transfers', to: ROUTES.interBranchTransfers }] },
+  { title: 'Finance', description: 'Chart of accounts, tax profiles, payment methods, and financial controls.', icon: Landmark, links: [{ label: 'Chart of accounts', to: ROUTES.finance }, { label: 'Tax and payment methods', to: ROUTES.masterData }] },
+  { title: 'People & Access', description: 'Employees, branch assignments, roles, permissions, and onboarding workflows.', icon: UsersRound, links: [{ label: 'Employees', to: ROUTES.hr }, { label: 'Workflow', to: ROUTES.workflow }] },
+  { title: 'System', description: 'Feature availability, data boundaries, and operational setup controls.', icon: ShieldCheck, links: [{ label: 'Feature configuration', to: ROUTES.platformConfiguration }, { label: 'Business setup', to: ROUTES.businessSetup }] },
+] as const
+
+export function SettingsPage() { return <Page eyebrow="Configuration center" title="Settings" description="Maintain business configuration from the same feature services used during initial setup. Navigation is for usability; permissions and Firestore rules remain the security boundary."><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map(({ title, description, icon: Icon, links }) => <Card key={title} className="p-5"><Icon className="text-emerald-700" size={22} /><h2 className="mt-4 font-semibold">{title}</h2><p className="mt-1 text-sm text-slate-500">{description}</p><ul className="mt-4 space-y-2">{links.map((link) => <li key={link.label}><Link className="text-sm font-medium text-emerald-700 hover:text-emerald-900" to={link.to}>{link.label}</Link></li>)}</ul></Card>)}</div><p className="mt-6 flex items-center gap-2 text-xs text-slate-500"><BookOpenCheck size={14} />Protected standard recipes are centrally governed; branches cannot override published versions.</p></Page> }

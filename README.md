@@ -19,3 +19,10 @@ npm run lint
 npm run typecheck
 npm test
 ```
+
+Initial installations can start at `/setup`. The wizard prepares a validated,
+resumable configuration plan; production initialization requires the trusted setup
+command described in `docs/BUSINESS_SETUP_WIZARD.md`.
+
+Permanent configuration is organized at `/settings` into Business, Products &
+Recipes, Inventory, Finance, People & Access, and System.

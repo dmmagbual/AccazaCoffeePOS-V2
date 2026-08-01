@@ -7,6 +7,10 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 ## [Unreleased]
 
 ### Added
+- Business Setup Wizard route, resumable validation, idempotent setup planning,
+  and setup documentation.
+- Settings and Configuration Center with categorized links to existing business
+  configuration modules.
 - Architecture, dependency, code-quality, error-handling, date/time, money,
   security, testing, Firestore-query, and technical-debt standards.
 - ADRs for feature boundaries, tenant-scoped repositories, and immutable

@@ -9,6 +9,11 @@ Project Codename: Project BARISTA
 
 # Vision
 
+Initial deployment uses the Business Setup Wizard (`/setup`) to collect and
+validate the organization, first branch, master-data seeds, features, chart, and
+owner details. Persisting this plan to Firebase is deferred to the trusted setup
+command required by the P2 security boundary.
+
 To build the most beautiful, fastest, and easiest-to-use Coffee Shop POS for independent cafés.
 
 This system should help owners manage their business, help staff work efficiently, and provide customers with an outstanding experience.

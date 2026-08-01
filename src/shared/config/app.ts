@@ -6,6 +6,8 @@ export const APP_CONFIG = {
 } as const
 
 export const ROUTES = {
+  settings: '/settings',
+  businessSetup: '/setup',
   dashboard: '/',
   pos: '/pos',
   menuManagement: '/menu-management',
