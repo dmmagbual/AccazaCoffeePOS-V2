@@ -1,0 +1,2 @@
+export interface PaymentMethodDocument { id: string; organizationId: string; code: string; name: string; active: boolean; branchIds?: readonly string[] | null; currencyCode?: string | null; financialAccountId?: string | null; settlementCategory: string }
+export interface PaymentMethodSnapshot { paymentMethodId: string; code: string; name: string; settlementCategory: string; currencyCode?: string; financialAccountId?: string }

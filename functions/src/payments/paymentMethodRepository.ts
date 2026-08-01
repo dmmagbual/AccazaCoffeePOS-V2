@@ -1,0 +1,17 @@
+import type { Firestore } from 'firebase-admin/firestore'
+import { HttpsError } from 'firebase-functions/https'
+import type { PaymentMethodDocument, PaymentMethodSnapshot } from './types.js'
+
+export class PaymentMethodRepository {
+  constructor(private readonly db: Firestore) {}
+  private async read(id: string) { const doc = await this.db.collection('paymentMethods').doc(id).get(); if (!doc.exists) throw new HttpsError('not-found', 'Payment method was not found.'); return { id: doc.id, ...(doc.data() as Omit<PaymentMethodDocument, 'id'>) } }
+  async getById(organizationId: string, id: string) { const value = await this.read(id); if (value.organizationId !== organizationId) throw new HttpsError('permission-denied', 'Payment method is outside organization scope.'); return value }
+  async getByCode(organizationId: string, code: string) { const query = await this.db.collection('paymentMethods').where('organizationId', '==', organizationId).where('code', '==', code).limit(1).get(); if (query.empty) throw new HttpsError('not-found', 'Payment method was not found.'); return { id: query.docs[0].id, ...(query.docs[0].data() as Omit<PaymentMethodDocument, 'id'>) } }
+  async listActiveForBranch(organizationId: string, branchId: string) { const query = await this.db.collection('paymentMethods').where('organizationId', '==', organizationId).where('active', '==', true).limit(100).get(); return query.docs.map((doc) => ({ id: doc.id, ...(doc.data() as Omit<PaymentMethodDocument, 'id'>) })).filter((value) => !value.branchIds || value.branchIds.length === 0 || value.branchIds.includes(branchId)) }
+  async validateActive(organizationId: string, id: string) { const value = await this.getById(organizationId, id); if (!value.active) throw new HttpsError('failed-precondition', 'Payment method is inactive.'); return value }
+  async validateBranchAvailability(organizationId: string, branchId: string, id: string) { const value = await this.validateActive(organizationId, id); if (value.branchIds && value.branchIds.length > 0 && !value.branchIds.includes(branchId)) throw new HttpsError('permission-denied', 'Payment method is unavailable for this branch.'); return value }
+  async validateCurrency(organizationId: string, id: string, currencyCode: string) { const value = await this.validateActive(organizationId, id); if (value.currencyCode && value.currencyCode !== currencyCode) throw new HttpsError('failed-precondition', 'Payment method currency is invalid.'); return value }
+  async resolveFinancialAccount(organizationId: string, id: string) { const value = await this.validateActive(organizationId, id); if (!value.financialAccountId) throw new HttpsError('failed-precondition', 'Payment method has no financial account.'); return value.financialAccountId }
+  async resolveSettlementCategory(organizationId: string, id: string) { return (await this.validateActive(organizationId, id)).settlementCategory }
+  async resolvePaymentMethodSnapshot(organizationId: string, branchId: string, id: string): Promise<PaymentMethodSnapshot> { const value = await this.validateBranchAvailability(organizationId, branchId, id); return { paymentMethodId: value.id, code: value.code, name: value.name, settlementCategory: value.settlementCategory, ...(value.currencyCode ? { currencyCode: value.currencyCode } : {}), ...(value.financialAccountId ? { financialAccountId: value.financialAccountId } : {}) } }
+}
