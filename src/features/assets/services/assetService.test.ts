@@ -1,0 +1,5 @@
+import { describe, expect, it } from 'vitest'
+import { calculateWorkOrderCost, generateMaintenanceOccurrence } from '.'
+import type { MaintenancePlan, MaintenanceWorkOrder } from '../domain'
+const now = new Date('2026-08-01T00:00:00.000Z')
+describe('asset services', () => { it('generates one scheduled occurrence and totals maintenance cost', () => { const plan: MaintenancePlan = { id: 'p', organizationId: 'org', branchId: 'b', assetId: 'a', code: 'PM-1', name: 'Quarterly service', strategy: 'TIME_BASED', intervalValue: 3, intervalUnit: 'MONTH', estimatedDurationMinutes: 60, estimatedCost: 100, priority: 'NORMAL', active: true, effectiveFrom: now, effectiveTo: null }; expect(generateMaintenanceOccurrence(plan, 'a', [], now)?.status).toBe('UPCOMING'); const order = { laborCost: 10, partsCost: 20, externalServiceCost: 30, otherCost: 5 } satisfies Pick<MaintenanceWorkOrder, 'laborCost' | 'partsCost' | 'externalServiceCost' | 'otherCost'>; expect(calculateWorkOrderCost(order as MaintenanceWorkOrder)).toBe(65) }) })

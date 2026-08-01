@@ -22,6 +22,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.crm.slice(1), lazy: async () => ({ Component: (await import('../../features/crm')).CrmPage }) },
       { path: ROUTES.analytics.slice(1), lazy: async () => ({ Component: (await import('../../features/analytics')).AnalyticsPage }) },
       { path: ROUTES.workflow.slice(1), lazy: async () => ({ Component: (await import('../../features/workflow')).WorkflowPage }) },
+      { path: ROUTES.assets.slice(1), lazy: async () => ({ Component: (await import('../../features/assets')).AssetsPage }) },
     ],
   },
 ])

@@ -21,4 +21,5 @@ export const ROUTES = {
   crm: '/crm',
   analytics: '/analytics',
   workflow: '/workflow',
+  assets: '/assets',
 } as const
