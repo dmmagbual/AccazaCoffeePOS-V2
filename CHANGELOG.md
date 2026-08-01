@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- P4-002H.1 aligns POS checkout with configured payment-method IDs,
+  identifier-only variation/option requests, refresh-safe idempotency recovery,
+  and immutable server-owned receipt rendering. P4-002 remains open.
+
 ## P4-002G — Historical Snapshot Immutability Audit
 
 - Added real callable emulator coverage for immutable sale, receipt, cashier-summary, payment, inventory/COGS, Finance, loyalty, audit, and outbox evidence after live master-data changes.
@@ -11,8 +18,11 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 
 ## [Unreleased]
 
+- Performed final P4-002 closure audit. Server-side callable, authoritative resolution, inventory, Finance, loyalty redemption, rollback, and immutable-history test evidence is documented; P4-002, PILOT-002, and PILOT-003 remain open for explicit POS, rules/index, tax-lifecycle, and UAT blockers.
+- Recorded the 2026-08-02 runtime dependency audit: 11 findings (2 high, 9 moderate); no forced upgrade was applied.
+
 - Added Firebase Functions runtime foundation; trusted repositories and sales callable remain open.
-- Added Functions request-context and emulator test fixtures; local emulator execution requires Java.
+- Added Functions request-context and emulator test fixtures.
 - Added server-only catalog, recipe, tax, payment, branch-authorization, and trusted-sale input resolver foundations; no public sale handler was added.
 - Added the `@abp/inventory-consumption` workspace package shared by application and Functions builds.
 - Refactored trusted-sale inventory effects to consume the shared inventory package.

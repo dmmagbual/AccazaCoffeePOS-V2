@@ -1,18 +1,20 @@
 # Pilot Gap Register
 
-P4-001A.0 Functions runtime foundation and P4-001A.1 server catalog resolvers are present. P4-002C.0 adds Finance, Loyalty, and shift-total server contracts, but they are not invoked by sale completion. Durable trusted-sale execution and PILOT-002 remain open.
+Updated 2026-08-02 after the final P4-002 closure audit. Status is evidence-based.
 
-| ID | Severity | Capability | Impact / affected workflow | Affected files | Recommended fix | Blocks pilot |
-| --- | --- | --- | --- | --- | --- | --- |
-| PILOT-001 | CRITICAL | Persistent catalog configuration | JSON is no longer a production POS dependency and repository/read-model contracts exist, but owner product/option persistence, audited writes, and POS repository wiring are incomplete. | `features/catalog`, `features/pos/pages/MenuManagementPage.tsx`, `features/pos/services/productCatalogService.ts` | Implement repository-backed product/category/variation/option services, trusted audited commands, owner UI, and POS read-model adapter. | Yes |
-| PILOT-002 | CRITICAL | Trusted completed-sale evidence | The trusted transaction now persists inventory, receipt, Finance, Loyalty earning, and shift-total effects, but the full seeded callable-sale emulator matrix and redemption/failure evidence are incomplete. | `functions/src/sales/completeSale.ts`, `functions/tests` | Add complete callable integration fixtures and prove all critical success, retry, and rollback scenarios before closure. | Yes |
-| PILOT-003 | CRITICAL | Tax transaction snapshots | New profile service exists but POS, receipt, refund, finance, and reports use legacy numeric tax amounts. | `features/finance/services/taxService.ts`, `features/pos/stores/cartStore.ts`, `application/sales/completeSale.ts` | Resolve profiles per line, allocate discounts, persist immutable `TaxSnapshot`, and reverse it for refunds. | Yes |
-| PILOT-004 | CRITICAL | Opening inventory | No auditable opening inventory posting exists to establish batches and balances. | `features/procurement`, `application/inventory-consumption` | Add an approved, idempotent, atomic opening-inventory command with reversal. | Yes |
-| PILOT-005 | HIGH | Route authorization | Settings and direct URLs have no React authorization guard; Firestore rules alone do not control local UI/local storage. | `shared/router/index.tsx`, `features/settings` | Add authenticated/permission route guards and test denied deep links. | Yes |
-| PILOT-006 | HIGH | Option price and recipe effects | Option effects are models only; cart price, receipt detail, and recipe quantity changes do not execute. | `features/catalog`, `features/pos/stores/cartStore.ts`, `application/operational/service.ts` | Implement selected-option line model and central option resolution before snapshot/consumption. | Yes |
-| PILOT-007 | HIGH | Shift settlement | Shift calculations are local and refunds/settlement/audit postings are incomplete. | `application/store-operations` | Persist shifts and settlement idempotently; derive payment totals from completed sales. | Yes |
-| PILOT-008 | HIGH | Security verification | No Firestore Emulator tests verify tenant isolation, financial write denial, or tax permissions. | `firestore.rules`, test suite | Add emulator rule tests and custom-claim fixtures. | Yes |
-| PILOT-009 | MEDIUM | Supplier/AP workflow | Core models/services exist, but no complete owner UI or verified invoice/receiving workflow. | `features/procurement`, `features/finance` | Implement screens/repositories and receiving-to-AP integration. | No, if initial inventory is imported through an approved alternative |
-| PILOT-010 | MEDIUM | Recipe builder completeness | Local builder lacks attachments, margin preview, robust variation links, and approval evidence. | `features/recipe-studio` | Complete recipe master/editor workflow after catalog integration. | No for a tightly controlled initial menu |
-| PILOT-011 | MEDIUM | HR and identity administration | Models/rules exist; employee/user/role workflows are not owner-operable. | `features/hr`, `firestore.rules` | Implement trusted identity management and assignment UI. | Yes if more than the local cashier is used |
-| PILOT-012 | MEDIUM | Browser smoke/UAT | No UI automation verifies rendered screens and error states. | test infrastructure | Add route smoke tests and execute the UAT script before pilot. | Yes |
+| ID | Severity | Status | Current evidence | Smallest remaining closure scope |
+| --- | --- | --- | --- | --- |
+| PILOT-001 | CRITICAL | OPEN | Persistent catalog/server resolution exists; owner-operated catalog completeness is outside P4-002. | Complete owner catalog workflows and POS read-model wiring. |
+| PILOT-002 | CRITICAL | OPEN | Real callable emulator coverage verifies authoritative resolution, inventory/COGS, Finance, loyalty earn/redemption, shift totals, rollback, immutability, and read/write rules. | P4-002H.1 POS integration/receipt behavior; P4-002K stale recovery/rules/index closure; executed UAT. |
+| PILOT-003 | CRITICAL | OPEN | Server tax precedence/effective dates/embedded snapshots/receipt/Finance/history are verified by `tax-resolution.test.mjs` and `historical-snapshots.test.mjs`. | Mixed-tax discount allocation and refund/reversal tax snapshot foundation; canonical tax snapshot document. |
+| PILOT-004 | CRITICAL | OPEN | No approved opening-inventory command audit evidence. | Approved idempotent opening inventory and reversals. |
+| PILOT-005 | HIGH | OPEN | Route authorization remains outside this closure audit. | Permission-aware route/deep-link guard and tests. |
+| PILOT-006 | HIGH | PARTIAL | Server option resolution/snapshots are verified. POS does not yet carry selected variation/option identifiers into trusted checkout. | P4-002H.1 client cart/request alignment. |
+| PILOT-007 | HIGH | PARTIAL | Trusted sale updates persistent shift totals idempotently. Close/settlement/refund workflow is not verified. | Shift settlement and refund foundations. |
+| PILOT-008 | HIGH | PARTIAL | Emulator rules tests verify key write denials and owner/cashier/cross-scope reads. | Add actual-collection coverage for every trusted collection and complete indexes. |
+| PILOT-009 | MEDIUM | OPEN | No change. | Procurement/AP workflow completion. |
+| PILOT-010 | MEDIUM | OPEN | Server recipe resolution is verified; full owner recipe workflow is not assessed here. | Recipe Builder operational completion. |
+| PILOT-011 | MEDIUM | OPEN | No change. | Employee/user/role owner workflows. |
+| PILOT-012 | MEDIUM | OPEN | Server emulator tests pass; browser UI/UAT coverage is not complete. | Execute the expanded UAT and POS interaction tests. |
+
+P4-002 and PILOT-002 must not be marked closed until the exact items in `docs/P4_002_REMAINING_WORK.md` are complete.

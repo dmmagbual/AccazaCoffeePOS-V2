@@ -1,47 +1,44 @@
-# P4-002 Remaining Work
+# P4-002 Remaining Closure Work
 
-This plan is deliberately limited to the smallest ordered closure milestones identified by `P4_002_CLOSURE_AUDIT.md`. It does not add unrelated modules.
+This is the minimum ordered scope from the final closure audit on 2026-08-02. It deliberately does not reopen already emulator-verified server catalog, recipe, tax, payment, inventory, Finance, loyalty, or rollback work.
 
-## E1 — Authoritative sale-input completion
+## P4-002H.2 — Production POS interaction evidence
 
-Close resolver and authorization evidence gaps before expanding sale effects.
+P4-002H.1 is complete in source and unit evidence: configured payment IDs,
+identifier-only variation/options, persisted key recovery, a minimal recovery
+callable, and server-owned receipt rendering are now in the production path.
 
-1. Parse and enforce franchise/head-office scope in `functions/src/shared/requestContext.ts` and server authorization.
-2. Add callable emulator fixtures/tests for variations, assigned option groups/items, required/min/max selections, option ingredient effects, published/draft/expired recipes, and tax precedence/effective dates.
-3. Validate payment currencies, inactive/branch-restricted methods, digital wallets, and split payments server-side.
+1. Add rendered component or browser E2E tests for double click, Enter twice,
+   refresh, offline, timeout, retry, cart preservation, and success-only
+   clearing.
+2. Run those flows against an authenticated emulator-backed configured sale.
 
-Acceptance: server ignores/rejects client authority; all variants are proven through the real callable.
+Acceptance: production checkout interaction behavior is observed in a browser,
+not only covered by source/unit tests.
 
-## E2 — Inventory and COGS closure
+## P4-002K — Operational security and recovery closure
 
-1. Add callable emulator tests for FIFO across multiple batches.
-2. Add allowed-negative and prohibited-negative tests, including no partial effects on rejection.
-3. Assert allocation, movement, balance, reconciliation exposure, confirmed COGS, provisional COGS, estimated COGS, and status persistence.
+1. Add client-SDK write-denial coverage for every actual server-owned trusted collection, including `loyaltyBalances`.
+2. Complete the Firestore index matrix for documented sales, receipts, idempotency lease recovery, movements, shift totals, finance, loyalty, and outbox queries; document every purpose and test representative queries.
+3. Add idempotency execution owner, recovery audit evidence, and retention/cleanup rules; test active-claim contention as well as expired reclaim.
 
-Acceptance: inventory/COGS outcomes are atomic, historically persisted, and duplicate-safe for positive, negative, and mixed cases.
+Acceptance: trusted evidence cannot be forged, required operational queries are indexed, and stale recovery is auditable as well as transaction-safe.
 
-## E3 — Finance, loyalty, shift, and idempotency closure
+## P4-003 — Tax lifecycle pilot closure
 
-1. Add configured-finance callable scenarios for balanced journal, tax payable, COGS/inventory, disabled/not-configured states, and retry safety.
-2. Add callable loyalty-earn scenarios with customer eligibility and duplicate safety; implement redemption only if required for pilot and then test reservation, application, and retry.
-3. Add two-sale/split-payment shift totals tests.
-4. Implement and test stale `CLAIMED` lease recovery with execution owner, audit record, and no duplicate effects.
+1. Add a mixed-tax sale with discount allocation evidence.
+2. Implement and test the refund/reversal tax-snapshot foundation required by the tax pilot definition.
+3. Record the canonical embedded tax snapshot contract in `docs/SALE_TAX_SNAPSHOTS.md`.
 
-Acceptance: all configured effects are durable and exactly once; unsupported configuration yields explicit status.
+Acceptance: rates, allocations, receipt/finance evidence, and reversals remain historically immutable.
 
-## E4 — Failure, historical, POS, and operational proof
+## P4-002L — Operational UAT and release evidence
 
-1. Inject inventory, receipt, shift, journal/outbox, and Firestore conflict failures; prove no partial successful sale appears.
-2. Change product name/price, recipe version, tax rate, and option price after a sale; prove historical sale/receipt/finance evidence is unchanged.
-3. Add POS tests for minimal callable input, stable idempotency keys, double-submit protection, cart preservation, success-only cart clearing, support correlation IDs, and no legacy fallback.
-4. Add missing trusted-collection indexes and query tests; update UAT documents from executed evidence only.
-
-Acceptance: all critical P4-002 emulator tests pass and docs/UAT accurately record them.
+1. Replace the one-paragraph UAT note with role, input, expected-result, observed-result, and sign-off fields.
+2. Execute UAT against the approved environment after H.2 and K pass.
+3. Add the dated runtime `npm audit --omit=dev` result to dependency documentation.
+4. Restore/author the missing `MASTER_PLAN.md` and `BUSINESS_RULE_BOOK.md` references or update the document inventory deliberately.
 
 ## Closure rule
 
-Only after E1 through E4 pass in the emulator may `P4-002` and `PILOT-002` be marked complete. `PILOT-003` remains open until the tax snapshot historical/finance evidence in E1 and E4 passes.
-
-## P4-002G update
-
-The historical master-data mutation path is verified. Remaining snapshot work is a safe explicit legacy/incomplete read state for malformed or missing persisted snapshots, plus independent historical view coverage; live master data must never be substituted.
+Only after P4-002H.2, P4-002K, and P4-002L have passing evidence may P4-002 and PILOT-002 close. PILOT-003 additionally requires P4-003.

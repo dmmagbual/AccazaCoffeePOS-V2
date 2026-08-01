@@ -1,54 +1,41 @@
 # POS Trust Boundary Audit
 
-Audit scope: P4-002H production POS checkout behavior. This document records source and automated-test evidence only; it does not close P4-002 or either pilot gap.
+Updated 2026-08-02. The browser checkout code is intentionally a client of the trusted callable, not a sales persistence engine.
 
-## Current checkout flow
+## Confirmed source boundary
 
-`OrderSummaryPanel` opens `PaymentDialog` after an open-shift check. It creates one `checkoutKey` per checkout attempt, forwards payment intent to `submitTrustedSale`, clears the cart only after a successful trusted response, and retains the key for retry after a recoverable failure.
+`src/features/pos/components/OrderSummaryPanel.tsx` calls `submitTrustedSale`; `src/application/sales/trustedSaleClient.ts` invokes the `completeSale` callable. `src/features/pos/posTrustBoundary.test.ts` confirms these checkout files contain no Firestore write primitive or trusted-sale collection write. `firestore.rules` independently denies client writes to trusted evidence.
 
 ```text
-Browser POS
-  -> identifier-only payment intent + stable idempotency key
-  -> Firebase callable: completeSale
-  -> trusted request context + server resolution
-  -> transactional sale / receipt / payment / inventory / finance / loyalty / shift evidence
-  -> trusted response: saleId, receiptNumber, totals, change, correlationId
-  -> browser success display
+POS identifiers / quantities / tender intent
+  -> completeSale callable
+  -> server context + catalog/tax/payment/recipe resolution
+  -> atomic trusted records
+  -> response with identifiers/totals/correlation ID
 ```
 
-## Responsibilities
+## P4-002H.1 alignment — 2026-08-02
 
-Browser responsibilities are limited to cart identifiers and quantities, payment method identifiers/amounts/references, one stable idempotency key, invocation, and display of the trusted result. The browser does not calculate authoritative product price, tax, recipe, COGS, change, receipt lines, inventory, Finance, loyalty, or shift totals.
+- Payment choices load client-safe configured `paymentMethods` records and
+  submit `paymentMethodId`, never a display label, settlement category, or
+  financial-account mapping.
+- Trusted request mapping carries only product, variation, and option-item
+  identifiers plus requested quantities. Names, prices, tax, recipe, and COGS
+  remain server-resolved.
+- Checkout recovery persists a minimum local attempt record and uses the
+  authenticated `getSaleAttempt` callable to resolve a refreshed uncertain
+  submission. Cart clearing occurs only after a committed trusted result.
+- The success display is based on the callable result plus the immutable
+  persisted receipt read model. The former synthetic confirmation receipt is
+  removed from the production client.
+- `completeSale.ts`, local persistence, and `receiptService.ts` are legacy
+  compatibility utilities only; POS checkout imports none of them.
 
-The callable resolves and persists authoritative sale evidence. It is the only production checkout command used by `src/features/pos/components/OrderSummaryPanel.tsx`.
+Browser interaction/E2E evidence for duplicate clicks, Enter, refresh, offline,
+and timeout remains P4-002H.2 work.
 
-## Browser write boundary
+## Non-blocking hardening
 
-The browser must never write `orders`, `receipts`, `payments`, `saleIdempotency`, `stockMovements`, `inventoryBalances`, `journalEntries`, `loyaltyTransactions`, `auditLogs`, `outboxEvents`, `shiftTotals`, or `cashierSaleSummaries`. POS source has no `firebase/firestore` import and no Firestore write primitive. Firestore Rules independently deny client writes to trusted evidence.
+`src/application/sales/completeSale.ts` and `persistence.ts` remain legacy/local compatibility code. They are not imported by the POS checkout, but should be isolated or removed after a caller audit.
 
-## Firestore write audit
-
-| Source | Finding | Classification |
-| --- | --- | --- |
-| `src/features/pos/**` and `src/application/sales/trustedSaleClient.ts` | No `addDoc`, `setDoc`, `updateDoc`, `writeBatch`, or transaction call. | VALID |
-| `src/application/store-operations/firebase.ts` | Writes shift open/close records only; it does not write sale evidence or shift totals. | VALID, outside checkout |
-| `src/shared/firebase/firestoreRepository.ts` | Generic repository can write a caller-supplied collection; it must never be wired to trusted-sale collections. | LEGACY boundary risk |
-| `src/application/sales/completeSale.ts` and `persistence.ts` | Compatibility/local-ledger sale flow. It is not imported by POS checkout and must not be restored as a production fallback. | LEGACY / REMOVE from future production bundle |
-
-## Duplicate and failure behavior
-
-`PaymentDialog` disables completion while processing. The checkout key persists through retry; the server returns the original completed result for a same-key same-request retry. Client errors now preserve a callable correlation ID when supplied and use safe messages for validation, authorization, conflict, offline/timeout, and internal failures. The cart and payment state clear only after success.
-
-## Receipt and inventory evidence
-
-POS success presentation uses callable `saleId`, receipt number, total, and change. It does not write or construct authoritative receipt, tax, recipe, payment, or inventory evidence. Full customer receipt rendering from the server-owned receipt document remains a separate operational UX requirement; the present payment dialog is a completion confirmation, not a receipt renderer.
-
-## Remaining recommended removals
-
-1. Retire the unused client-side compatibility `completeSale` and local sale ledger once remaining non-POS callers are removed.
-2. Replace local payment method labels with trusted catalog payment-method IDs before operational rollout.
-3. Add browser-component or end-to-end test tooling for actual double-click, Enter, refresh, and timeout UI interactions; current regression tests prove the code-level guard and callable boundary.
-
-## Status
-
-P4-002, PILOT-002, and PILOT-003 remain open. This audit verifies the browser trust boundary; it does not replace the remaining operational closure evidence.
+P4-002H.1 is the smallest mandatory next step. P4-002 and PILOT-002 remain open.

@@ -56,3 +56,33 @@ export const completeSale = onCall({ region: 'asia-southeast1' }, async (request
         throw mapCallableError(error, requestCorrelationId);
     }
 });
+/**
+ * Client recovery lookup for a persisted checkout key. It deliberately exposes
+ * only the completed callable result and never idempotency request internals.
+ */
+export const getSaleAttempt = onCall({ region: 'asia-southeast1' }, async (request) => {
+    const requestCorrelationId = correlationId();
+    try {
+        const context = { ...requestContext(request), correlationId: requestCorrelationId };
+        const data = request.data;
+        if (typeof data?.requestedBranchId !== 'string' || typeof data.idempotencyKey !== 'string' || !data.idempotencyKey)
+            throw new HttpsError('invalid-argument', 'A checkout recovery key is required.');
+        const db = getAdminFirestore();
+        const authorization = new BranchAuthorizationRepository(db);
+        authorization.validateUserOrganizationAccess(context, context.organizationId);
+        authorization.validateUserBranchAccess(context, data.requestedBranchId);
+        authorization.validatePermission(context, 'sales.complete');
+        await authorization.validateOrganizationActive(context.organizationId);
+        await authorization.validateBranchActive(context.organizationId, data.requestedBranchId);
+        const snapshot = await db.collection('saleIdempotency').doc(`${context.organizationId}_${data.idempotencyKey}`).get();
+        if (!snapshot.exists)
+            return { status: 'NOT_FOUND', correlationId: requestCorrelationId };
+        const evidence = snapshot.data();
+        if (evidence.branchId !== data.requestedBranchId)
+            throw new HttpsError('permission-denied', 'Checkout attempt is outside branch scope.');
+        return { status: evidence.status === 'COMPLETED' && evidence.resultSnapshot ? 'COMPLETED' : 'PENDING', ...(evidence.status === 'COMPLETED' && evidence.resultSnapshot ? { result: evidence.resultSnapshot } : {}), correlationId: requestCorrelationId };
+    }
+    catch (error) {
+        throw mapCallableError(error, requestCorrelationId);
+    }
+});
