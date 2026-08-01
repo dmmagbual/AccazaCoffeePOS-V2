@@ -29,7 +29,7 @@ export const completeSale = onCall({ region: 'asia-southeast1' }, async (request
         const tax = new TaxResolver(new TaxRepository(db));
         const payments = new PaymentMethodRepository(db);
         const resolved = await new TrustedSaleInputResolver(authorization, categories, products, variations, assignments, groups, options, recipes, tax, payments).resolveTrustedSaleInput({ branchId: data.requestedBranchId, lines: data.cartLines.map((line) => ({ productId: line.productId, variationId: line.variationId, quantity: line.quantity, selectedOptionItemIds: line.selectedOptionItemIds, notes: line.notes })), paymentMethodIds: data.payments.map((payment) => payment.paymentMethodId), customerId: data.customerId, notes: data.notes }, context);
-        return new FirestoreTrustedSaleRepository(db).execute(data, context, resolved);
+        return await new FirestoreTrustedSaleRepository(db).execute(data, context, resolved);
     }
     catch (error) {
         throw mapCallableError(error, requestCorrelationId);
