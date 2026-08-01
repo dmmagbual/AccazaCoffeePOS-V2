@@ -82,7 +82,7 @@ test('completeSale safely reclaims a stale claimed idempotency record', { skip: 
   const db = getAdminFirestore(); const auth = getAuth(); const fixture = await seedTrustedShiftValidationFixture(db, auth, { prefix: 'rollback-stale-claim' }); const idempotencyKey = 'rollback-stale-claim'
   try {
     await seedSupportingEvidence(db, fixture)
-    const staleHash = JSON.stringify({ branchId: fixture.branchId, shiftId: fixture.openShiftId, cartLines: [{ clientLineId: idempotencyKey, productId: fixture.productId, quantity: 1 }], payments: [{ paymentMethodId: fixture.paymentMethodId, amount: 110, currencyCode: 'PHP' }], customerId: `${fixture.organizationId}-customer`, notes: null })
+    const staleHash = JSON.stringify({ branchId: fixture.branchId, shiftId: fixture.openShiftId, cartLines: [{ clientLineId: idempotencyKey, productId: fixture.productId, quantity: 1 }], payments: [{ paymentMethodId: fixture.paymentMethodId, amount: 110, currencyCode: 'PHP' }], customerId: `${fixture.organizationId}-customer`, requestedRedemptionPoints: 0, notes: null })
     await db.collection('saleIdempotency').doc(`${fixture.organizationId}_${idempotencyKey}`).set({ organizationId: fixture.organizationId, requestHash: staleHash, status: 'CLAIMED', leaseExpiresAt: new Date('2000-01-01') })
     const token = await signIn(auth, fixture)
     const result = await invoke(token, fixture, idempotencyKey)

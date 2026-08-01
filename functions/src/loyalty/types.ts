@@ -4,4 +4,4 @@ export interface LoyaltyProgramDocument { id: string; organizationId: string; br
 export interface LoyaltyBalanceDocument { id: string; organizationId: string; customerId: string; availablePoints: number; reservedPoints: number; updatedAt?: Date }
 export type LoyaltyTransactionType = 'EARN' | 'REDEEM' | 'REVERSE'
 export interface LoyaltyTransactionInstruction { saleId: string; organizationId: string; customerId: string; type: LoyaltyTransactionType; points: number; createdBy: string; idempotencyKey: string }
-export interface LoyaltyResolution { status: 'NOT_ENABLED' | 'NOT_APPLICABLE' | 'READY'; customer: CustomerSnapshot | null; program: LoyaltyProgramDocument | null; pointsEarned: number; permittedRedemption: number }
+export interface LoyaltyResolution { status: 'NOT_ENABLED' | 'NOT_APPLICABLE' | 'READY'; customer: CustomerSnapshot | null; program: LoyaltyProgramDocument | null; pointsEarned: number; permittedRedemption: number; redemptionAmount: number }
