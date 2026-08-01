@@ -13,6 +13,7 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 - Refactored trusted-sale inventory effects to consume the shared inventory package.
 - Added P4-002C.0 server-only Finance, Loyalty, shift-total, and outbox contracts; sale-path posting remains intentionally pending.
 - Integrated trusted sale Finance journals, loyalty earning, and deterministic shift totals; pilot closure remains pending full callable-sale emulator coverage.
+- Added server-owned cashier sale-summary projections for client-safe POS history.
 
 ### Added
 - Recipe Master lifecycle, immutable numbering, ownership, permission-gated
