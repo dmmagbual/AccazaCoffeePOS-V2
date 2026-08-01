@@ -5,3 +5,7 @@ Functions build, lint, and non-emulator tests are available. Emulator verificati
 ## P4-001A.1 — Server Catalog Repositories
 
 Server-side resolution contracts and Admin SDK repositories are in place for catalog, recipe, tax, payment, and branch authorization. P4-002 remains open pending a secure callable and durable sale-effect integration.
+
+## P4-002B.0 — Shared Inventory Package Boundary
+
+Complete. The shared package is consumable by the root app and Functions. P4-002B.1 remains open to replace the sale-local allocation implementation.

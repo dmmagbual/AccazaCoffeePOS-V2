@@ -1,6 +1,7 @@
 {
   "name": "accazacoffeepos-v2",
   "private": true,
+  "workspaces": ["packages/*", "functions"],
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -15,6 +16,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "firebase": "^12.17.0",
+    "@abp/inventory-consumption": "file:packages/inventory-consumption",
     "firebase-admin": "^14.2.0",
     "firebase-functions": "^7.3.2",
     "lucide-react": "^1.28.0",
