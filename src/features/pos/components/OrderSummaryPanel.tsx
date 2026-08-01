@@ -1,8 +1,8 @@
 import { ShoppingBag, Tag } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Card } from '../../../shared/components'
 import { localOperationalIntegration } from '../../../application/operational'
-import { completeSale, getConfiguredSalePersistence } from '../../../application/sales'
+import { submitTrustedSale } from '../../../application/sales'
 import { useOperationsStore } from '../../../application/store-operations'
 import { selectCartItems, selectCartSummary, useCartStore } from '../stores'
 import { CartLineItem } from './CartLineItem'
@@ -10,6 +10,7 @@ import { PaymentDialog } from './PaymentDialog'
 
 export function OrderSummaryPanel() {
   const [paymentOpen, setPaymentOpen] = useState(false)
+  const checkoutKey = useRef<string | null>(null)
   const [operationalErrors, setOperationalErrors] = useState<readonly string[]>([])
   const items = useCartStore(selectCartItems)
   const summary = useCartStore(selectCartSummary)
@@ -25,12 +26,13 @@ export function OrderSummaryPanel() {
   const beginCheckout = useCallback(() => {
     if (!activeShift) { setOperationalErrors(['Open a shift before accepting sales.']); return }
     const readiness = localOperationalIntegration.validateOrderOperationalReadiness({ items: items.map((item) => ({ product: item.product, quantity: item.quantity })), saleDate: new Date() })
-    setOperationalErrors(readiness.errors.filter((error) => error.blocking).map((error) => error.message))
+    setOperationalErrors(readiness.errors.filter((error) => error.blocking).map((error) => error.message)); checkoutKey.current ??= crypto.randomUUID()
     setPaymentOpen(true)
   }, [activeShift, items])
-  async function completeCurrentSale(payments: Parameters<typeof completeSale>[0]['payments']) {
-    const result = await completeSale({ organizationId: 'local-accaza', storeId: branchId, cashierId: 'local-cashier', shiftId: activeShift?.id, items, discount: useCartStore.getState().discount, taxRate: useCartStore.getState().taxRate, payments, saleTimestamp: new Date() }, { validateOrder: localOperationalIntegration.validateOrderOperationalReadiness, buildSnapshot: localOperationalIntegration.buildOrderItemRecipeSnapshot, persistence: getConfiguredSalePersistence(), business: { name: 'Accaza Coffee', address: 'Accaza Business Platform', tin: '', footerMessage: 'Thank you for your visit.' } })
-    if (result.success) clearCart()
+  async function completeCurrentSale(payments: Parameters<typeof submitTrustedSale>[0]['payments']) {
+    if (!activeShift) return { success: false as const, error: { code: 'operational_error' as const, message: 'An open shift is required.', recoverable: true }, warnings: [] }
+    const result = await submitTrustedSale({ branchId, shiftId: activeShift.id, items, payments, idempotencyKey: checkoutKey.current ?? (checkoutKey.current = crypto.randomUUID()) })
+    if (result.success) { clearCart(); checkoutKey.current = null }
     return result
   }
   function confirmClearCart() { if (window.confirm('Clear all items from the current order?')) { setOperationalErrors([]); clearCart() } }

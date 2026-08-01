@@ -1,5 +1,6 @@
 export { completeSale } from './completeSale'
 export { trustedCompleteSale } from './trustedCompleteSale'
+export { submitTrustedSale } from './trustedSaleClient'
 export type { TrustedSaleCommand, TrustedSaleRepository, TrustedSaleResult } from './trustedCompleteSale'
 export { aggregateCompletedSales } from './dashboard'
 export { getConfiguredSalePersistence, localSalePersistence, useLocalSaleLedger } from './persistence'

@@ -1,7 +1,33 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.health = void 0;
+exports.completeSale = exports.health = void 0;
 const https_1 = require("firebase-functions/https");
+const index_js_1 = require("./authorization/index.js");
+const index_js_2 = require("./catalog/index.js");
+const index_js_3 = require("./payments/index.js");
+const index_js_4 = require("./recipes/index.js");
+const completeSale_js_1 = require("./sales/completeSale.js");
+const trustedSaleInputResolver_js_1 = require("./sales/trustedSaleInputResolver.js");
 const admin_js_1 = require("./shared/admin.js");
 const requestContext_js_1 = require("./shared/requestContext.js");
+const index_js_5 = require("./tax/index.js");
 exports.health = (0, https_1.onRequest)({ region: 'asia-southeast1' }, async (_request, response) => { (0, admin_js_1.getAdminFirestore)(); response.status(200).json({ service: 'abp-functions', status: 'ok', environment: process.env.FUNCTIONS_EMULATOR === 'true' ? 'emulator' : 'server', timestamp: new Date().toISOString(), correlationId: (0, requestContext_js_1.correlationId)() }); });
+exports.completeSale = (0, https_1.onCall)({ region: 'asia-southeast1' }, async (request) => {
+    const context = (0, requestContext_js_1.requestContext)(request);
+    const data = request.data;
+    if (!data || typeof data !== 'object')
+        throw new https_1.HttpsError('invalid-argument', 'A sale command is required.');
+    const db = (0, admin_js_1.getAdminFirestore)();
+    const authorization = new index_js_1.BranchAuthorizationRepository(db);
+    const categories = new index_js_2.CategoryRepository(db);
+    const products = new index_js_2.ProductRepository(db, categories);
+    const variations = new index_js_2.VariationRepository(db);
+    const assignments = new index_js_2.ProductOptionAssignmentRepository(db);
+    const groups = new index_js_2.OptionGroupRepository(db);
+    const options = new index_js_2.OptionItemRepository(db);
+    const recipes = new index_js_4.RecipeRepository(db);
+    const tax = new index_js_5.TaxResolver(new index_js_5.TaxRepository(db));
+    const payments = new index_js_3.PaymentMethodRepository(db);
+    const resolved = await new trustedSaleInputResolver_js_1.TrustedSaleInputResolver(authorization, categories, products, variations, assignments, groups, options, recipes, tax, payments).resolveTrustedSaleInput({ branchId: data.requestedBranchId, lines: data.cartLines.map((line) => ({ productId: line.productId, variationId: line.variationId, quantity: line.quantity, selectedOptionItemIds: line.selectedOptionItemIds, notes: line.notes })), paymentMethodIds: data.payments.map((payment) => payment.paymentMethodId), customerId: data.customerId, notes: data.notes }, context);
+    return new completeSale_js_1.FirestoreTrustedSaleRepository(db).execute(data, context, resolved);
+});
