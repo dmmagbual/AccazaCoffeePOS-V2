@@ -45,10 +45,16 @@ service cloud.firestore {
     }
 
     // Store/branch master records are readable in scope and role-managed.
-    match /{collection=products|categories|modifiers|inventoryItems|suppliers|purchaseOrders|goodsReceipts|inventoryBatches|purchaseDocuments|storageLocations}/{id} {
+    match /{collection=inventoryItems|suppliers|purchaseOrders|goodsReceipts|inventoryBatches|purchaseDocuments|storageLocations}/{id} {
       allow read: if storeScope(resource.data);
       allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
       allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /{collection=products|productCategories|productVariations|optionGroups|optionItems|productOptionAssignments|productAvailability|posMenuLayouts}/{id} {
+      allow read: if orgScope(resource.data) && can('catalog.view');
+      allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
       allow delete: if false;
     }
     match /{collection=customers|loyaltyAccounts}/{id} {
