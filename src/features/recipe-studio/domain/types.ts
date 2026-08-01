@@ -66,3 +66,9 @@ export interface RecipeVersion extends RecipeCostSummary {
 export interface ProductRecipeLink { productId: string; recipeId: string; activeVersionId: string }
 export interface RecipeVersionDifference { ingredientChanges: readonly string[]; costDifference: number }
 export interface RecipeRecord { recipe: Recipe; versions: readonly RecipeVersion[]; productName: string; productCategory: string }
+
+export type RecipeMasterType = 'STANDARD_PRODUCT' | 'MANUFACTURING' | 'SEMI_FINISHED' | 'PACKAGING' | 'R_AND_D' | 'STAFF_VARIATION' | 'PROMOTIONAL' | 'CUSTOM'
+export type RecipeMasterStatus = 'DRAFT' | 'R_AND_D' | 'INTERNAL_TESTING' | 'PENDING_APPROVAL' | 'APPROVED' | 'PUBLISHED' | 'SUPERSEDED' | 'RETIRED' | 'ARCHIVED'
+export interface RecipeMaster { id: string; recipeNumber: string; organizationId: string; productId: string; productVariationId: string | null; recipeName: string; description: string; recipeType: RecipeMasterType; recipeStatus: RecipeMasterStatus; businessVersion: string; effectiveFrom: Date | null; effectiveTo: Date | null; ownerEmployeeId: string; department: string; workflowInstanceId: string | null; approvalRequired: boolean; published: boolean; publishedAt: Date | null; publishedBy: string | null; retiredAt: Date | null; retiredBy: string | null; cloneOfRecipeVersionId: string | null; notes: string; createdAt: Date; createdBy: string; updatedAt: Date; updatedBy: string }
+export interface RecipeMasterVersionHistory { recipeId: string; businessVersion: string; reasonForChange: string; requestedBy: string; approvedBy: string | null; publishedBy: string | null; effectiveFrom: Date | null; expectedOutcome: string; estimatedCostImpact: number | null; notes: string; createdAt: Date }
+export interface RecipeMasterEvent { type: 'RecipeCreated' | 'RecipeVersionCreated' | 'RecipeSubmitted' | 'RecipeApproved' | 'RecipePublished' | 'RecipeRetired'; organizationId: string; recipeId: string; actorId: string; occurredAt: Date }

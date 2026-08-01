@@ -30,6 +30,12 @@ service cloud.firestore {
       allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('ingredients.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if false;
     }
+    match /taxProfiles/{id} {
+      allow read: if orgScope(resource.data) && can('tax.view');
+      allow create: if orgScope(request.resource.data) && can('tax.manageProfiles') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('tax.manageProfiles') || can('tax.changeRates'));
+      allow delete: if false;
+    }
     match /recipes/{recipeId}/versions/{versionId} {
       function recipeOrg() { return get(/databases/$(database)/documents/recipes/$(recipeId)).data.organizationId; }
       allow read: if sameOrg(recipeOrg());

@@ -4,6 +4,11 @@ import { ROUTES } from '../config'
 
 export const router = createBrowserRouter([
   { path: ROUTES.catalog, lazy: async () => ({ Component: (await import('../../features/catalog')).ProductCatalogPage }) },
+  { path: ROUTES.catalogCategories, lazy: async () => ({ Component: (await import('../../features/pos/pages/MenuManagementPage')).MenuManagementPage }) },
+  { path: ROUTES.catalogProducts, lazy: async () => ({ Component: (await import('../../features/pos/pages/MenuManagementPage')).MenuManagementPage }) },
+  { path: ROUTES.catalogVariations, lazy: async () => ({ Component: (await import('../../features/pos/pages/MenuManagementPage')).MenuManagementPage }) },
+  { path: ROUTES.catalogOptionGroups, lazy: async () => ({ Component: (await import('../../features/recipe-studio')).RecipeManagementPage }) },
+  { path: ROUTES.catalogOptionItems, lazy: async () => ({ Component: (await import('../../features/recipe-studio')).RecipeManagementPage }) },
   { path: ROUTES.settings, lazy: async () => ({ Component: (await import('../../features/settings')).SettingsPage }) },
   { path: ROUTES.businessSetup, lazy: async () => ({ Component: (await import('../../features/business-setup')).BusinessSetupPage }) },
   {
@@ -21,6 +26,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.production.slice(1), lazy: async () => ({ Component: (await import('../../features/production')).ProductionPage }) },
       { path: ROUTES.platformConfiguration.slice(1), lazy: async () => ({ Component: (await import('../../features/platform-configuration')).PlatformConfigurationPage }) },
       { path: ROUTES.finance.slice(1), lazy: async () => ({ Component: (await import('../../features/finance')).FinancePage }) },
+      { path: ROUTES.taxConfiguration.slice(1), lazy: async () => ({ Component: (await import('../../features/finance')).TaxConfigurationPage }) },
       { path: ROUTES.interBranchTransfers.slice(1), lazy: async () => ({ Component: (await import('../../features/inter-branch-transfers')).InterBranchTransfersPage }) },
       { path: ROUTES.crm.slice(1), lazy: async () => ({ Component: (await import('../../features/crm')).CrmPage }) },
       { path: ROUTES.analytics.slice(1), lazy: async () => ({ Component: (await import('../../features/analytics')).AnalyticsPage }) },

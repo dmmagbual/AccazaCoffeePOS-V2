@@ -1,0 +1,13 @@
+import { describe, expect, it } from 'vitest'
+import type { TaxProfile, TaxProfileVersion } from '../domain'
+import { calculateTaxSnapshot, resolveTaxProfile, scheduleTaxRateChange } from './taxService'
+
+const at = new Date('2026-01-01T00:00:00.000Z')
+const version = (overrides: Partial<TaxProfileVersion> = {}): TaxProfileVersion => ({ id: 'v1', taxProfileId: 'vat', rate: '0.075', calculationMode: 'TAX_EXCLUSIVE', effectiveFrom: at, effectiveTo: null, active: true, roundingMethod: 'HALF_UP', roundingPrecision: 2, createdAt: at, createdBy: 'owner', changeReason: 'Initial configuration', ...overrides })
+const profile = (overrides: Partial<TaxProfile> = {}): TaxProfile => ({ id: 'vat', organizationId: 'org', code: 'VAT', name: 'Configurable tax', description: null, taxType: 'VAT', priceDisplayMode: 'SHOW_BOTH', taxPayableAccountId: 'tax-payable', taxExpenseAccountId: null, recoverableTaxAccountId: null, branchIds: null, priority: 0, active: true, versions: [version()], createdAt: at, createdBy: 'owner', updatedAt: at, updatedBy: 'owner', ...overrides })
+
+describe('central tax service', () => {
+  it('uses a controlled configured rate without a hardcoded tax dependency', () => { const snapshot = calculateTaxSnapshot({ amountMinor: 10_000, profile: profile(), version: version(), calculatedAt: at }); expect(snapshot.taxAmountMinor).toBe(750); expect(snapshot.taxInclusiveAmountMinor).toBe(10_750) })
+  it('calculates tax-inclusive, zero-rated, and exempt snapshots safely', () => { expect(calculateTaxSnapshot({ amountMinor: 10_750, profile: profile(), version: version({ calculationMode: 'TAX_INCLUSIVE' }), calculatedAt: at }).taxAmountMinor).toBe(750); expect(calculateTaxSnapshot({ amountMinor: 1_000, profile: profile({ taxType: 'ZERO_RATED' }), version: version({ rate: '0', calculationMode: 'TAX_EXCLUSIVE' }), calculatedAt: at }).zeroRatedAmountMinor).toBe(1_000); expect(calculateTaxSnapshot({ amountMinor: 1_000, profile: profile({ taxType: 'EXEMPT' }), version: version({ rate: '0', calculationMode: 'NOT_APPLICABLE' }), calculatedAt: at }).exemptAmountMinor).toBe(1_000) })
+  it('resolves by centralized priority and rejects overlapping rate versions', () => { const organization = profile({ id: 'org-tax', versions: [version({ id: 'org-v', taxProfileId: 'org-tax' })] }); const product = profile(); expect(resolveTaxProfile([organization, product], { organizationId: 'org', branchId: 'main', transactionAt: at, productTaxProfileId: 'vat', organizationDefaultTaxProfileId: 'org-tax' })?.profile.id).toBe('vat'); expect(() => scheduleTaxRateChange(profile(), version({ id: 'v2', effectiveFrom: new Date('2026-06-01') }))).toThrow('overlapping') })
+})

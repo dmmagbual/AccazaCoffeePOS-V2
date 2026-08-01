@@ -7,6 +7,11 @@ export const APP_CONFIG = {
 
 export const ROUTES = {
   catalog: '/catalog',
+  catalogCategories: '/catalog/categories',
+  catalogProducts: '/catalog/products',
+  catalogOptionGroups: '/catalog/option-groups',
+  catalogOptionItems: '/catalog/option-items',
+  catalogVariations: '/catalog/variations',
   settings: '/settings',
   businessSetup: '/setup',
   dashboard: '/',
@@ -20,6 +25,7 @@ export const ROUTES = {
   production: '/production',
   platformConfiguration: '/platform-configuration',
   finance: '/finance',
+  taxConfiguration: '/finance/tax-configuration',
   interBranchTransfers: '/inter-branch-transfers',
   crm: '/crm',
   analytics: '/analytics',

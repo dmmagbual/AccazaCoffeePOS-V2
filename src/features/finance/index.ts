@@ -1,3 +1,6 @@
 export * from './domain'
 export * from './services'
 export { FinancePage } from './pages/FinancePage'
+export { TaxConfigurationPage } from './pages/TaxConfigurationPage'
+export * from './domain'
+export * from './services'

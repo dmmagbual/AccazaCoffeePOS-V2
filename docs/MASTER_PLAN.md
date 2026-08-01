@@ -18,6 +18,9 @@ Product catalog configuration is organization-owned, with optional branch
 availability and effective-dated pricing. Recipe costing and inventory consumption
 remain centralized in their existing engines.
 
+Recipe Studio RS-001 establishes controlled recipe master identity and lifecycle
+records before future builder, R&D, costing, and manufacturing modules.
+
 To build the most beautiful, fastest, and easiest-to-use Coffee Shop POS for independent cafés.
 
 This system should help owners manage their business, help staff work efficiently, and provide customers with an outstanding experience.

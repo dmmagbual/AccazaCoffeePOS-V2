@@ -4,6 +4,8 @@ export interface CartItem {
   product: Product
   quantity: number
   note: string
+  /** Recipe Studio modifier option identifiers selected for this line. */
+  modifierIds?: readonly string[]
   itemTotal: number
 }
 

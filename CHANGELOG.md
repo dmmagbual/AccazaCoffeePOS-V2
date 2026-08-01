@@ -7,6 +7,8 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 ## [Unreleased]
 
 ### Added
+- Recipe Master lifecycle, immutable numbering, ownership, permission-gated
+  workflow transitions, cloning, search, and RS-001 documentation.
 - Catalog domain foundations for hierarchy, variations, prices, modifiers, add-ons,
   combos, availability, and POS layout metadata.
 - Business Setup Wizard route, resumable validation, idempotent setup planning,
