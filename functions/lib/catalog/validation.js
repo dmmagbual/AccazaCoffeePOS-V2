@@ -5,4 +5,5 @@ export const isBranchAvailable = (availability, branchId) => !availability || av
 export const assertPositiveEffects = (effects) => effects.forEach((effect) => { if (!effect.ingredientId || !effect.unitId || effect.quantity <= 0 || (effect.multiplier !== undefined && effect.multiplier <= 0))
     throw new HttpsError('failed-precondition', 'Option ingredient effect is invalid.'); if ((effect.action === 'SUBSTITUTE_INGREDIENT' || effect.action === 'REPLACE_RECIPE_COMPONENT') && !effect.replacementIngredientId)
     throw new HttpsError('failed-precondition', 'Replacement ingredient is required.'); });
-export const isEffective = (from, to, at) => (!from || from <= at) && (!to || to >= at);
+const normalizeDate = (value) => value instanceof Date ? value : value?.toDate();
+export const isEffective = (from, to, at) => { const start = normalizeDate(from); const end = normalizeDate(to); return (!start || start <= at) && (!end || end >= at); };
