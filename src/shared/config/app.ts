@@ -20,4 +20,5 @@ export const ROUTES = {
   interBranchTransfers: '/inter-branch-transfers',
   crm: '/crm',
   analytics: '/analytics',
+  workflow: '/workflow',
 } as const

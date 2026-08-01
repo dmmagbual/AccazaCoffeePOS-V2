@@ -1,4 +1,4 @@
-import { ArrowLeftRight, BarChart3, BookOpenCheck, Building2, Database, Factory, Landmark, LayoutDashboard, PackageCheck, Settings2, SlidersHorizontal, ShoppingCart, Store, Users, Wheat } from 'lucide-react'
+import { ArrowLeftRight, BarChart3, BookOpenCheck, Building2, ClipboardCheck, Database, Factory, Landmark, LayoutDashboard, PackageCheck, Settings2, SlidersHorizontal, ShoppingCart, Store, Users, Wheat } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { APP_CONFIG, ROUTES } from '../shared/config'
 
@@ -37,6 +37,7 @@ export function AppLayout() {
           <NavLink to={ROUTES.interBranchTransfers} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><ArrowLeftRight size={18} />Branch transfers</NavLink>
           <NavLink to={ROUTES.crm} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Users size={18} />Customers</NavLink>
           <NavLink to={ROUTES.analytics} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><BarChart3 size={18} />Analytics</NavLink>
+          <NavLink to={ROUTES.workflow} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><ClipboardCheck size={18} />Workflow</NavLink>
         </nav>
       </aside>
       <section className="min-w-0 flex-1 lg:ml-64">

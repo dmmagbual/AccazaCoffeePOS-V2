@@ -21,6 +21,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.interBranchTransfers.slice(1), lazy: async () => ({ Component: (await import('../../features/inter-branch-transfers')).InterBranchTransfersPage }) },
       { path: ROUTES.crm.slice(1), lazy: async () => ({ Component: (await import('../../features/crm')).CrmPage }) },
       { path: ROUTES.analytics.slice(1), lazy: async () => ({ Component: (await import('../../features/analytics')).AnalyticsPage }) },
+      { path: ROUTES.workflow.slice(1), lazy: async () => ({ Component: (await import('../../features/workflow')).WorkflowPage }) },
     ],
   },
 ])
