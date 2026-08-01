@@ -1,6 +1,6 @@
 # Pilot Gap Register
 
-P4-001A.0 Functions runtime foundation is in progress. Its isolated build, lint, and non-emulator request-context tests pass. Firestore/Functions/Auth emulator verification is blocked here because Java is unavailable. P4-001A.1 server resolver foundations are present, but durable trusted-sale execution and PILOT-002 remain open.
+P4-001A.0 Functions runtime foundation and P4-001A.1 server catalog resolvers are present. P4-002C.0 adds Finance, Loyalty, and shift-total server contracts, but they are not invoked by sale completion. Durable trusted-sale execution and PILOT-002 remain open.
 
 | ID | Severity | Capability | Impact / affected workflow | Affected files | Recommended fix | Blocks pilot |
 | --- | --- | --- | --- | --- | --- | --- |

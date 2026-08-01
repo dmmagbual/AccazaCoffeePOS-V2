@@ -9,3 +9,7 @@ Server-side resolution contracts and Admin SDK repositories are in place for cat
 ## P4-002B.0 — Shared Inventory Package Boundary
 
 Complete. The shared package is consumable by the root app and Functions. P4-002B.1 remains open to replace the sale-local allocation implementation.
+
+## P4-002C.0 — Trusted Finance and Loyalty Server Infrastructure
+
+Server repositories and resolution contracts are in place. P4-002C.1 remains open to invoke finance, loyalty, and durable shift totals from the trusted sale transaction. P4-002 and PILOT-002 remain open.

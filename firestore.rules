@@ -255,6 +255,35 @@ service cloud.firestore {
       allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
       allow write: if false;
     }
+    // Trusted Finance, Loyalty, and shift evidence: written only by Admin SDK.
+    match /financePostingRequests/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('finance.read');
+      allow write: if false;
+    }
+    match /loyaltyTransactions/{id} {
+      allow read: if orgScope(resource.data) && can('crm.loyalty.read');
+      allow write: if false;
+    }
+    match /loyaltyBalances/{id} {
+      allow read: if orgScope(resource.data) && can('crm.loyalty.read');
+      allow write: if false;
+    }
+    match /loyaltyPostingRequests/{id} {
+      allow read: if orgScope(resource.data) && can('crm.loyalty.manage');
+      allow write: if false;
+    }
+    match /shiftTotals/{id} {
+      allow read: if branchScope(resource.data) && can('operations.read');
+      allow write: if false;
+    }
+    match /appliedShiftSales/{id} {
+      allow read: if branchScope(resource.data) && can('operations.read');
+      allow write: if false;
+    }
+    match /outboxEvents/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
     match /financeExpenses/{id} {
       allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
       allow write: if false;

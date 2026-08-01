@@ -11,6 +11,7 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 - Added server-only catalog, recipe, tax, payment, branch-authorization, and trusted-sale input resolver foundations; no public sale handler was added.
 - Added the `@abp/inventory-consumption` workspace package shared by application and Functions builds.
 - Refactored trusted-sale inventory effects to consume the shared inventory package.
+- Added P4-002C.0 server-only Finance, Loyalty, shift-total, and outbox contracts; sale-path posting remains intentionally pending.
 
 ### Added
 - Recipe Master lifecycle, immutable numbering, ownership, permission-gated
