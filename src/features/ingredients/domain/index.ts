@@ -1,1 +1,1 @@
-export type { Allergen, Ingredient, IngredientCategoryOption, IngredientListItem, IngredientStatus, IngredientTimestamp, IngredientUnit, SupplierOption } from './types'
+export type { Allergen, Ingredient, IngredientCategory, IngredientCategoryOption, IngredientDomainEvent, IngredientListItem, IngredientMaster, IngredientMasterStatus, IngredientMasterType, IngredientStatus, IngredientTimestamp, IngredientUnit, SupplierOption } from './types'

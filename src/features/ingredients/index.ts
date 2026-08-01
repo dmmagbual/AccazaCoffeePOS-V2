@@ -1,1 +1,5 @@
 export { IngredientManagementPage } from './pages/IngredientManagementPage'
+export { IngredientsPage } from './pages/IngredientsPage'
+export * from './domain'
+export * from './repositories'
+export * from './services'

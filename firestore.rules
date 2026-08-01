@@ -18,10 +18,16 @@ service cloud.firestore {
     match /{document=**} { allow read, write: if false; }
 
     // Centrally governed master data.
-    match /{collection=ingredients|recipes|productionRecipes|productionRecipeVersions|unitsOfMeasure|productCategories|ingredientCategories|taxRates|paymentMethods|appSettings}/{id} {
+    match /{collection=recipes|productionRecipes|productionRecipeVersions|unitsOfMeasure|productCategories|ingredientCategories|taxRates|paymentMethods|appSettings}/{id} {
       allow read: if orgScope(resource.data);
       allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
       allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /ingredients/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('ingredients.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('ingredients.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if false;
     }
     match /recipes/{recipeId}/versions/{versionId} {

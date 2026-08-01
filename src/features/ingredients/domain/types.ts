@@ -52,3 +52,9 @@ export interface IngredientListItem {
   latestPurchaseCost: number
   baseUnitCost: number
 }
+
+export type IngredientMasterType = 'RAW_INGREDIENT' | 'SEMI_FINISHED_PRODUCT' | 'FINISHED_INVENTORY_PRODUCT' | 'PACKAGING' | 'CONSUMABLE' | 'CLEANING_SUPPLY' | 'SPARE_PART' | 'NON_STOCK' | 'OTHER'
+export type IngredientMasterStatus = 'DRAFT' | 'ACTIVE' | 'TEMPORARILY_UNAVAILABLE' | 'DISCONTINUED' | 'RETIRED' | 'ARCHIVED'
+export interface IngredientCategory { id: string; organizationId: string; parentCategoryId: string | null; code: string; name: string; description: string; sortOrder: number; active: boolean; inventoryTracked: boolean; edible: boolean; perishable: boolean; defaultShelfLifeDays: number | null; defaultStorageClass: string | null; createdAt: Date; createdBy: string; updatedAt: Date; updatedBy: string }
+export interface IngredientMaster { id: string; ingredientCode: string; organizationId: string; name: string; shortName: string | null; description: string; categoryId: string; ingredientType: IngredientMasterType; baseUnitId: string; standardReferenceCost: number; lastPurchaseCost: number; currencyCode: 'PHP'; preferredSupplierId: string | null; shelfLifeDays: number | null; expiryTrackingRequired: boolean; batchTrackingRequired: boolean; reorderPoint: number | null; minimumStock: number | null; targetStock: number | null; maximumStock: number | null; negativeInventoryAllowed: boolean; storageClass: string; defaultStorageLocationId: string | null; active: boolean; status: IngredientMasterStatus; notes: string; createdAt: Date; createdBy: string; updatedAt: Date; updatedBy: string }
+export interface IngredientDomainEvent { type: 'IngredientCategoryCreated' | 'IngredientCreated' | 'IngredientActivated' | 'IngredientDeactivated'; organizationId: string; entityId: string; actorId: string; occurredAt: Date }
