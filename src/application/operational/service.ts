@@ -1,6 +1,6 @@
 import type { Product } from '../../features/pos/domain'
-import type { RecipeIngredient, RecipeModifierOption, RecipeVersion } from '../../features/recipes/domain'
-import { calculateIngredientLineCost, convertRecipeQuantityToBase } from '../../features/recipes/services'
+import type { RecipeIngredient, RecipeModifierOption, RecipeVersion } from '../../features/recipe-studio'
+import { calculateIngredientLineCost, convertRecipeQuantityToBase } from '../../features/recipe-studio'
 import type { IntegrationError, OperationalIntegrationSources, OperationalOrderInput, OperationalValidationResult, OrderCostSnapshot, OrderItemIngredientSnapshot, OrderItemModifierSnapshot, OrderItemRecipeSnapshot, ProductOperationalProfile, ProductRecipeResolution, ResolvedRecipeIngredient, ResolvedRecipeVersion } from './contracts'
 
 function asDate(value: Date | { toDate(): Date }): Date { return value instanceof Date ? value : value.toDate() }

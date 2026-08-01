@@ -1,5 +1,5 @@
 import { localIngredients, localIngredientUnits } from '../../features/ingredients/data/localIngredients'
-import { localRecipeRecords } from '../../features/recipes/data/localRecipes'
+import { localRecipeRecords } from '../../features/recipe-studio/data/localRecipes'
 import type { ProductOperationalProfile } from './contracts'
 import { createOperationalIntegrationService } from './service'
 

@@ -5,7 +5,7 @@ import { calculateCartSummary } from '../features/pos/stores/cartStore'
 import { calculateDiscount } from '../features/pos/services/discountCalculator'
 import { calculateTax } from '../features/pos/services/taxCalculator'
 import { getPaymentSummary } from '../features/pos/stores/paymentStore'
-import { calculateRecipeCost, convertRecipeQuantityToBase } from '../features/recipes/services'
+import { calculateRecipeCost, convertRecipeQuantityToBase } from '../features/recipe-studio'
 import { localIngredientUnits } from '../features/ingredients/data/localIngredients'
 import type { Product } from '../features/pos/domain'
 

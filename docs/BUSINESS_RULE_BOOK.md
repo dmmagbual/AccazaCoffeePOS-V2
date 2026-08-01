@@ -16,7 +16,7 @@ The operating hierarchy is Organization → Branch → Store → Shift → Emplo
 
 Head Office controls recipes, core ingredient standards, enterprise permissions, supplier policy, and organization-wide reporting. Branches operate approved standards, receive goods, run shifts, and record approved exceptions. Franchise operations consume Head Office standards and may not create competing master definitions or recipe overrides.
 
-## 3. Recipe Management
+## 3. Recipe Studio
 
 Recipes belong to Head Office. Branches may use, view, and execute approved recipes but may not modify them. Each recipe has versions with a lifecycle of Draft, Testing, Approved, and Retired. Published/approved versions are immutable. Editing an approved version creates a new draft.
 

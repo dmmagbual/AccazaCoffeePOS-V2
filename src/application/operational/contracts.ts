@@ -1,6 +1,6 @@
 import type { Ingredient, IngredientUnit } from '../../features/ingredients/domain'
 import type { Product } from '../../features/pos/domain'
-import type { Recipe, RecipeIngredient, RecipeVersion } from '../../features/recipes/domain'
+import type { Recipe, RecipeIngredient, RecipeVersion } from '../../features/recipe-studio'
 
 export type IntegrationErrorCode = 'product_not_found' | 'product_archived' | 'recipe_missing' | 'recipe_archived' | 'version_missing' | 'version_not_effective' | 'version_not_published' | 'ingredient_missing' | 'ingredient_cost_missing' | 'unit_conversion_invalid' | 'modifier_unavailable'
 export interface IntegrationError { code: IntegrationErrorCode; message: string; blocking: boolean; productId?: string; recipeId?: string; ingredientId?: string; modifierId?: string }
