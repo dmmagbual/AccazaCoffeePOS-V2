@@ -8,7 +8,7 @@ export class BranchAuthorizationRepository {
         throw new HttpsError('not-found', 'Organization was not found.'); return { id: doc.id, ...doc.data() }; }
     async getBranch(organizationId, id) { const doc = await this.db.collection('branches').doc(id).get(); if (!doc.exists)
         throw new HttpsError('not-found', 'Branch was not found.'); const value = { id: doc.id, ...doc.data() }; if (value.organizationId !== organizationId)
-        throw new HttpsError('permission-denied', 'Branch is outside organization scope.'); return value; }
+        throw new HttpsError('permission-denied', 'User is not authorized for this organization.'); return value; }
     async validateOrganizationActive(organizationId) { const value = await this.getOrganization(organizationId); if (!value.active)
         throw new HttpsError('failed-precondition', 'Organization is inactive.'); return value; }
     async validateBranchActive(organizationId, branchId) { const value = await this.getBranch(organizationId, branchId); if (!value.active)
