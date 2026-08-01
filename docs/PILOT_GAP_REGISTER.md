@@ -1,5 +1,7 @@
 # Pilot Gap Register
 
+P4-001A.0 Functions runtime foundation is in progress. Its isolated build, lint, and non-emulator request-context tests pass. Firestore/Functions/Auth emulator verification is blocked here because Java is unavailable. P4-001A repositories and PILOT-002 remain open.
+
 | ID | Severity | Capability | Impact / affected workflow | Affected files | Recommended fix | Blocks pilot |
 | --- | --- | --- | --- | --- | --- | --- |
 | PILOT-001 | CRITICAL | Persistent catalog configuration | JSON is no longer a production POS dependency and repository/read-model contracts exist, but owner product/option persistence, audited writes, and POS repository wiring are incomplete. | `features/catalog`, `features/pos/pages/MenuManagementPage.tsx`, `features/pos/services/productCatalogService.ts` | Implement repository-backed product/category/variation/option services, trusted audited commands, owner UI, and POS read-model adapter. | Yes |

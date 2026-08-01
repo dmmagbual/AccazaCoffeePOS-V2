@@ -6,6 +6,9 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 
 ## [Unreleased]
 
+- Added Firebase Functions runtime foundation; trusted repositories and sales callable remain open.
+- Added Functions request-context and emulator test fixtures; local emulator execution requires Java.
+
 ### Added
 - Recipe Master lifecycle, immutable numbering, ownership, permission-gated
   workflow transitions, cloning, search, and RS-001 documentation.

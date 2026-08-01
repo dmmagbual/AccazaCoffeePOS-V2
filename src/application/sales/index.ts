@@ -1,4 +1,6 @@
 export { completeSale } from './completeSale'
+export { trustedCompleteSale } from './trustedCompleteSale'
+export type { TrustedSaleCommand, TrustedSaleRepository, TrustedSaleResult } from './trustedCompleteSale'
 export { aggregateCompletedSales } from './dashboard'
 export { getConfiguredSalePersistence, localSalePersistence, useLocalSaleLedger } from './persistence'
 export type { CompletedSaleItem, CompletedSaleOrder, CompleteSaleResult, SaleError, SaleFailureCode, SaleInput, SalePersistence, SaleStatus } from './contracts'

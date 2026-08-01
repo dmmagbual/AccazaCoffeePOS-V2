@@ -1,0 +1,3 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+test('Firestore emulator transaction and cleanup fixture', { skip: !process.env.FIRESTORE_EMULATOR_HOST }, async () => { const { getAdminFirestore } = await import('../lib/shared/admin.js'); const firestore = getAdminFirestore(); const reference = firestore.collection('_emulatorTests').doc('transaction'); await firestore.runTransaction(async (transaction) => { transaction.set(reference, { value: 1 }) }); assert.equal((await reference.get()).data()?.value, 1); await reference.delete(); assert.equal((await reference.get()).exists, false) })

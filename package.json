@@ -6,14 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "eslint src eslint.config.js vite.config.ts",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "preview": "vite preview"
+    ,"functions:build":"npm --prefix functions run build","functions:lint":"npm --prefix functions run lint","functions:test":"npm --prefix functions test","emulators:start":"firebase emulators:start","emulators:test":"firebase emulators:exec --only firestore,functions,auth \"npm --prefix functions test\""
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "firebase": "^12.17.0",
+    "firebase-admin": "^14.2.0",
+    "firebase-functions": "^7.3.2",
     "lucide-react": "^1.28.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
