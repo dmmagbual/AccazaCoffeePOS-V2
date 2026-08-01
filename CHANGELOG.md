@@ -7,8 +7,13 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 ## [Unreleased]
 
 ### Added
+- Architecture, dependency, code-quality, error-handling, date/time, money,
+  security, testing, Firestore-query, and technical-debt standards.
+- ADRs for feature boundaries, tenant-scoped repositories, and immutable
+  operational records.
 
 ### Changed
+- Added a `typecheck` verification command and tightened environment-file ignores.
 
 ### Fixed
 

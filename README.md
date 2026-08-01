@@ -1,12 +1,13 @@
 # Accaza Business Platform
 
-Project BARISTA is a feature-first React foundation for Accaza Coffee House operations.
+ABP is a feature-first React foundation for Accaza Coffee House operations. It is currently development-stage software, not production-ready operational software.
 
 ## Structure
 
 - `src/app` — application composition
 - `src/layouts` — authenticated shell and navigation
-- `src/features` — dashboard, auth, POS, and inventory modules
+- `src/features` — business capabilities and their public APIs
+- `src/application` — cross-feature use cases and operational orchestration
 - `src/shared` — reusable UI, hooks, service boundaries, Firebase configuration, router, configuration, and theme
 
 ## Commands
@@ -15,4 +16,6 @@ Project BARISTA is a feature-first React foundation for Accaza Coffee House oper
 npm run dev
 npm run build
 npm run lint
+npm run typecheck
+npm test
 ```
