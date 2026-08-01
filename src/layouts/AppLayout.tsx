@@ -1,4 +1,4 @@
-import { ArrowLeftRight, BarChart3, BookOpenCheck, Building2, ClipboardCheck, Database, Factory, Landmark, LayoutDashboard, PackageCheck, Settings2, SlidersHorizontal, ShoppingCart, Store, Users, UsersRound, Wheat, Wrench } from 'lucide-react'
+import { ArrowLeftRight, BarChart3, BookOpenCheck, Building2, ClipboardCheck, Database, Factory, Landmark, LayoutDashboard, Network, PackageCheck, Settings2, SlidersHorizontal, ShoppingCart, Store, Users, UsersRound, Wheat, Wrench } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { APP_CONFIG, ROUTES } from '../shared/config'
 
@@ -40,6 +40,7 @@ export function AppLayout() {
           <NavLink to={ROUTES.workflow} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><ClipboardCheck size={18} />Workflow</NavLink>
           <NavLink to={ROUTES.assets} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Wrench size={18} />Assets</NavLink>
           <NavLink to={ROUTES.hr} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><UsersRound size={18} />Human resources</NavLink>
+          <NavLink to={ROUTES.franchise} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Network size={18} />Franchise</NavLink>
         </nav>
       </aside>
       <section className="min-w-0 flex-1 lg:ml-64">

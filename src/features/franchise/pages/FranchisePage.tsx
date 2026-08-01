@@ -1,0 +1,3 @@
+import { Network } from 'lucide-react'
+import { Card, Page } from '../../../shared/components'
+export function FranchisePage() { return <Page eyebrow="Head Office" title="Franchise foundation" description="Separate franchise organizations, governed agreements, and compliance-ready branch profiles. Disabled for ordinary branch operations."><Card className="p-5"><Network className="text-emerald-700" size={22} /><h2 className="mt-4 font-semibold">Governed expansion</h2><p className="mt-1 text-sm text-slate-500">Franchise data remains organization-isolated and commercial royalty billing is intentionally not enabled.</p></Card></Page> }

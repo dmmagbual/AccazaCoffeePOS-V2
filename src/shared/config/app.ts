@@ -23,4 +23,5 @@ export const ROUTES = {
   workflow: '/workflow',
   assets: '/assets',
   hr: '/hr',
+  franchise: '/franchise',
 } as const
