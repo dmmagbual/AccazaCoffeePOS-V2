@@ -26,6 +26,6 @@ test('scoped read-record fixture seeds deterministic records with the intended t
     ['journalEntries', 'read-journal-owner'], ['financePostingRequests', 'read-finance-owner'], ['stockMovements', 'read-cost-owner'],
     ['loyaltyBalances', 'read-loyalty-owner'], ['auditLogs', 'read-audit-owner'],
   ]
-  assert.equal(scopedReadFixtureDocumentCount, 20)
+  assert.equal(scopedReadFixtureDocumentCount, 21)
   await Promise.all(probes.map(async ([collection, id]) => assert.equal((await db.collection(collection).doc(id).get()).exists, false)))
 })

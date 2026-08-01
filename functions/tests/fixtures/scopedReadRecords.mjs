@@ -16,7 +16,7 @@ const fixtureDocuments = [
   ['cashierSaleSummaries', 'read-summary-cashier'], ['receipts', 'read-receipt-cashier'],
   ['cashierSaleSummaries', 'read-summary-other-branch'], ['receipts', 'read-receipt-other-branch'],
   ['cashierSaleSummaries', 'read-summary-other-org'], ['receipts', 'read-receipt-other-org'], ['journalEntries', 'read-journal-other-org'], ['loyaltyBalances', 'read-loyalty-other-org'],
-  ['cashierSaleSummaries', 'read-summary-franchise'], ['receipts', 'read-receipt-franchise'], ['journalEntries', 'read-journal-franchise'], ['loyaltyBalances', 'read-loyalty-franchise'],
+  ['cashierSaleSummaries', 'read-summary-franchise'], ['receipts', 'read-receipt-franchise'], ['journalEntries', 'read-journal-franchise'], ['loyaltyBalances', 'read-loyalty-franchise'], ['auditLogs', 'read-audit-franchise'],
 ]
 
 function createSummary(organizationId, branchId, shiftId, suffix, franchiseOrganizationId) {
@@ -58,6 +58,7 @@ export async function seedScopedReadRecords(db) {
     write('receipts', 'read-receipt-franchise', receipt(ids.franchiseOrganizationId, 'read-franchise-branch', 'franchise', ids.franchiseOrganizationId)),
     write('journalEntries', 'read-journal-franchise', { organizationId: ids.franchiseOrganizationId, storeId: 'read-franchise-branch', branchId: 'read-franchise-branch', franchiseOrganizationId: ids.franchiseOrganizationId }),
     write('loyaltyBalances', 'read-loyalty-franchise', { organizationId: ids.franchiseOrganizationId, customerId: 'read-customer-franchise', availablePoints: 100, franchiseOrganizationId: ids.franchiseOrganizationId }),
+    write('auditLogs', 'read-audit-franchise', { organizationId: ids.franchiseOrganizationId, storeId: 'read-franchise-branch', branchId: 'read-franchise-branch', franchiseOrganizationId: ids.franchiseOrganizationId, eventType: 'SaleCompleted' }),
   ])
   return ids
 }
