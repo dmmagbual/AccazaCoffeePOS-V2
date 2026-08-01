@@ -5,11 +5,11 @@ const reasons: Record<string, string> = {
   'Organization scope is required.': 'ORGANIZATION_ACCESS_DENIED',
   'User is not authorized for this organization.': 'ORGANIZATION_ACCESS_DENIED',
   'User is not authorized for this branch.': 'BRANCH_ACCESS_DENIED',
-  'Employee is not active.': 'INACTIVE_EMPLOYEE',
-  'Employee is not assigned to this branch.': 'MISSING_BRANCH_ASSIGNMENT',
-  'An open shift is required.': 'MISSING_OPEN_SHIFT',
-  'The requested shift is not open.': 'CLOSED_SHIFT',
-  'Required permission is missing.': 'MISSING_POS_SALE_PERMISSION'
+  'Employee is not active.': 'EMPLOYEE_INACTIVE',
+  'Employee is not assigned to this branch.': 'EMPLOYEE_BRANCH_ASSIGNMENT_MISSING',
+  'An open shift is required.': 'OPEN_SHIFT_REQUIRED',
+  'The requested shift is not open.': 'SHIFT_CLOSED',
+  'Required permission is missing.': 'POS_PERMISSION_DENIED'
 }
 
 export function mapCallableError(error: unknown, correlationId: string): HttpsError {
