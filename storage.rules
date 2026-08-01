@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function sameOrg(orgId) { return signedIn() && request.auth.token.organizationId == orgId; }
+    function can(permission) { return signedIn() && request.auth.token.permissions != null && request.auth.token.permissions.hasAny([permission]); }
+
+    // Files are tenant-prefixed. Browser uploads are limited to permitted business
+    // documents; confidential HR and finance attachments require dedicated grants.
+    match /organizations/{organizationId}/stores/{storeId}/{allPaths=**} {
+      allow read: if sameOrg(organizationId) && can('attachments.read');
+      allow write: if sameOrg(organizationId) && can('attachments.manage') && request.resource.size < 15 * 1024 * 1024;
+    }
+    match /organizations/{organizationId}/confidential/{allPaths=**} {
+      allow read: if sameOrg(organizationId) && can('attachments.confidential.read');
+      allow write: if sameOrg(organizationId) && can('attachments.confidential.manage') && request.resource.size < 15 * 1024 * 1024;
+    }
+  }
+}

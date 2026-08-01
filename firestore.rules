@@ -2,55 +2,74 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
+    function has(listName, value) { return signedIn() && request.auth.token[listName] != null && request.auth.token[listName].hasAny([value]); }
     function sameOrg(orgId) { return signedIn() && request.auth.token.organizationId == orgId; }
-    function sameStore(storeId) { return request.auth.token.storeIds.hasAny([storeId]); }
-    function can(permission) { return signedIn() && request.auth.token.permissions.hasAny([permission]); }
-    function validScope(data) { return sameOrg(data.organizationId) && sameStore(data.storeId); }
-    function nonFinancialCollection(collection) { return collection != 'payments' && collection != 'receipts' && collection != 'cashDrawers' && collection != 'expenses' && collection != 'orders' && collection != 'suppliers' && collection != 'purchaseOrders' && collection != 'goodsReceipts' && collection != 'inventoryBatches' && collection != 'purchaseDocuments' && collection != 'featureDefinitions' && collection != 'featureConfigurations' && collection != 'storageLocations' && collection != 'inventoryLocationMovements' && collection != 'inventoryTransfers' && collection != 'inventoryReservations' && collection != 'productionRecipes' && collection != 'productionRecipeVersions' && collection != 'productionOrders' && collection != 'productionOutputs' && collection != 'productionBatches' && collection != 'productionWaste' && collection != 'productionCosts'; }
-    match /{collection}/{id} {
-      allow read: if validScope(resource.data);
-      allow create: if nonFinancialCollection(collection) && validScope(request.resource.data) && request.resource.data.createdBy == request.auth.uid && request.resource.data.updatedBy == request.auth.uid;
-      allow update: if nonFinancialCollection(collection) && validScope(resource.data) && validScope(request.resource.data) && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy && request.resource.data.updatedBy == request.auth.uid;
-      allow delete: if can('admin.delete');
-    }
-    // Ingredients are organization-controlled master data, not store-owned inventory.
-    match /ingredients/{id} {
-      allow read: if sameOrg(resource.data.organizationId);
-      allow create: if sameOrg(request.resource.data.organizationId) && can('ingredients.manage') && request.resource.data.createdBy == request.auth.uid && request.resource.data.updatedBy == request.auth.uid;
-      allow update: if sameOrg(resource.data.organizationId) && sameOrg(request.resource.data.organizationId) && can('ingredients.manage') && resource.data.organizationId == request.resource.data.organizationId && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy && request.resource.data.updatedBy == request.auth.uid;
-      allow delete: if false;
-    }
-    // Recipes and their versions are Head Office-controlled organization master data.
-    match /recipes/{id} {
-      allow read: if sameOrg(resource.data.organizationId);
-      allow create: if sameOrg(request.resource.data.organizationId) && can('recipes.manage') && request.resource.data.createdBy == request.auth.uid && request.resource.data.updatedBy == request.auth.uid;
-      allow update: if sameOrg(resource.data.organizationId) && sameOrg(request.resource.data.organizationId) && can('recipes.manage') && resource.data.organizationId == request.resource.data.organizationId && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy && request.resource.data.updatedBy == request.auth.uid;
+    function sameStore(storeId) { return has('storeIds', storeId); }
+    function sameBranch(branchId) { return has('branchIds', branchId); }
+    function can(permission) { return has('permissions', permission); }
+    function storeScope(data) { return sameOrg(data.organizationId) && sameStore(data.storeId); }
+    function branchScope(data) { return sameOrg(data.organizationId) && sameBranch(data.branchId); }
+    function orgScope(data) { return sameOrg(data.organizationId); }
+    function actorCreates(data) { return data.createdBy == request.auth.uid && data.updatedBy == request.auth.uid; }
+    function immutableAudit(before, after) { return before.createdAt == after.createdAt && before.createdBy == after.createdBy && before.organizationId == after.organizationId; }
+
+    // Default deny: each collection must opt in below. This intentionally replaces
+    // the former broad catch-all rule, which could grant a new collection access.
+    match /{document=**} { allow read, write: if false; }
+
+    // Centrally governed master data.
+    match /{collection=ingredients|recipes|productionRecipes|productionRecipeVersions|unitsOfMeasure|productCategories|ingredientCategories|taxRates|paymentMethods|appSettings}/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if false;
     }
     match /recipes/{recipeId}/versions/{versionId} {
       function recipeOrg() { return get(/databases/$(database)/documents/recipes/$(recipeId)).data.organizationId; }
       allow read: if sameOrg(recipeOrg());
       allow create: if sameOrg(recipeOrg()) && can('recipes.manage') && request.resource.data.status == 'draft' && request.resource.data.createdBy == request.auth.uid;
-      allow update: if sameOrg(recipeOrg()) && can('recipes.manage') && resource.data.status == 'draft' && (request.resource.data.status == 'draft' || can('recipes.publish')) && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy;
+      allow update: if sameOrg(recipeOrg()) && resource.data.status == 'draft' && can('recipes.manage') && request.resource.data.createdBy == resource.data.createdBy;
       allow delete: if false;
     }
-    match /{collection=payments|receipts|cashDrawers|expenses}/{id} { allow write: if can('finance.write'); }
-    match /orders/{id} { allow write: if can('sales.write'); }
-    match /suppliers/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.manage'); }
-    match /purchaseOrders/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.manage'); }
-    match /goodsReceipts/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.receive'); }
-    match /inventoryBatches/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.receive'); }
-    match /purchaseDocuments/{id} { allow read: if validScope(resource.data); allow write: if can('procurement.manage'); }
-    match /featureDefinitions/{id} { allow read: if signedIn(); allow write: if can('platform.configure'); }
-    match /featureConfigurations/{id} { allow read: if sameOrg(resource.data.organizationId); allow create, update: if sameOrg(request.resource.data.organizationId) && can('platform.configure') && request.resource.data.configuredBy == request.auth.uid; allow delete: if false; }
-    match /storageLocations/{id} { allow read: if validScope(resource.data); allow create, update: if validScope(request.resource.data) && (can('platform.configure') || can('locations.manage')) && request.resource.data.updatedBy == request.auth.uid; allow delete: if false; }
-    match /inventoryTransfers/{id} { allow read: if validScope(resource.data); allow create: if validScope(request.resource.data) && can('inventory.transfer') && request.resource.data.requestedBy == request.auth.uid; allow update: if validScope(resource.data) && validScope(request.resource.data) && can('inventory.transfer') && resource.data.branchId == request.resource.data.branchId && resource.data.status == 'DRAFT'; allow delete: if false; }
-    match /{collection=inventoryLocationMovements|inventoryReservations}/{id} { allow read: if validScope(resource.data); allow create: if validScope(request.resource.data) && can('inventory.transfer'); allow update, delete: if false; }
-    // Production recipes are centrally approved; operational records remain store scoped.
-    match /productionRecipes/{id} { allow read: if sameOrg(resource.data.organizationId); allow create: if sameOrg(request.resource.data.organizationId) && can('production.manage') && request.resource.data.createdBy == request.auth.uid && request.resource.data.updatedBy == request.auth.uid; allow update: if sameOrg(resource.data.organizationId) && sameOrg(request.resource.data.organizationId) && can('production.manage') && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy && request.resource.data.updatedBy == request.auth.uid; allow delete: if false; }
-    match /productionRecipeVersions/{id} { allow read: if sameOrg(resource.data.organizationId); allow create: if sameOrg(request.resource.data.organizationId) && can('production.manage') && request.resource.data.status == 'draft' && request.resource.data.createdBy == request.auth.uid; allow update: if sameOrg(resource.data.organizationId) && can('production.manage') && resource.data.status == 'draft' && (request.resource.data.status == 'draft' || can('production.approve')); allow delete: if false; }
-    match /productionOrders/{id} { allow read: if validScope(resource.data); allow create: if validScope(request.resource.data) && can('production.create') && request.resource.data.createdBy == request.auth.uid; allow update: if validScope(resource.data) && validScope(request.resource.data) && (can('production.manage') || (can('production.execute') && resource.data.producedBy == request.auth.uid)) && resource.data.createdAt == request.resource.data.createdAt && resource.data.createdBy == request.resource.data.createdBy; allow delete: if false; }
-    match /{collection=productionOutputs|productionBatches|productionWaste|productionCosts}/{id} { allow read: if validScope(resource.data); allow create: if validScope(request.resource.data) && can('production.complete') && request.resource.data.createdBy == request.auth.uid; allow update, delete: if false; }
-    match /{collection=users|roles|permissions}/{id} { allow write: if can('identity.manage'); }
+
+    // Store/branch master records are readable in scope and role-managed.
+    match /{collection=products|categories|modifiers|inventoryItems|suppliers|purchaseOrders|goodsReceipts|inventoryBatches|purchaseDocuments|storageLocations}/{id} {
+      allow read: if storeScope(resource.data);
+      allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
+      allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /{collection=customers|loyaltyAccounts}/{id} {
+      allow read: if storeScope(resource.data) && can('customers.read');
+      allow create, update: if storeScope(request.resource.data) && can('customers.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Financial, inventory, audit, and workflow evidence is service-account only.
+    // Admin SDK and trusted server commands bypass these rules; browser clients
+    // cannot forge ledgers, stock movements, approvals, or history.
+    match /{collection=orders|orderItems|payments|receipts|shifts|cashDrawers|expenses|stockMovements|inventoryLocationMovements|inventoryReservations|supplierInvoices|accountsPayable|supplierPayments|supplierPaymentAllocations|journalEntries|journalLines|financeExpenses|cashTransfers|productionOrders|productionOutputs|productionBatches|productionWaste|productionCosts|auditLogs|workflowInstances|workflowHistory|approvalRequests|maintenanceWorkOrders}/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /inventoryTransfers/{id} {
+      allow read: if sameOrg(resource.data.organizationId) && (sameBranch(resource.data.sourceBranchId) || sameBranch(resource.data.destinationBranchId)) && can('inventory.transfer');
+      allow write: if false;
+    }
+
+    // Identity and confidential personnel data require dedicated permissions.
+    match /{collection=users|roles|permissions}/{id} {
+      allow read, write: if can('identity.manage');
+    }
+    match /{collection=people|employees|employeeBranchAssignments|attendanceEvents|employeeSkills|trainingRecords}/{id} {
+      allow read: if orgScope(resource.data) && can('hr.confidential.read');
+      allow create, update: if orgScope(request.resource.data) && can('hr.confidential.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /{collection=franchiseOrganizations|franchiseAgreements|royaltyRules|royaltyCalculations}/{id} {
+      allow read: if orgScope(resource.data) && can('franchise.read');
+      allow create, update: if orgScope(request.resource.data) && can('franchise.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
   }
 }
