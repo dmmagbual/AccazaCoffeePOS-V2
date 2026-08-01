@@ -1,1 +1,407 @@
-{"indexes":[{"collectionGroup":"orders","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"storeId","order":"ASCENDING"},{"fieldPath":"createdAt","order":"DESCENDING"}]},{"collectionGroup":"products","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"},{"fieldPath":"visibleOnPOS","order":"ASCENDING"}]},{"collectionGroup":"products","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"categoryId","order":"ASCENDING"},{"fieldPath":"status","order":"ASCENDING"}]},{"collectionGroup":"productCategories","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"},{"fieldPath":"visibleOnPOS","order":"ASCENDING"},{"fieldPath":"sortOrder","order":"ASCENDING"}]},{"collectionGroup":"productVariations","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"productId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"}]},{"collectionGroup":"productOptionAssignments","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"productId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"}]},{"collectionGroup":"optionItems","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"modifierGroupId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"}]},{"collectionGroup":"taxConfigurationVersions","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"taxProfileId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"}]},{"collectionGroup":"paymentMethods","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"}]},{"collectionGroup":"employeeBranchAssignments","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"employeeId","order":"ASCENDING"},{"fieldPath":"branchId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"}]},{"collectionGroup":"shifts","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"storeId","order":"ASCENDING"},{"fieldPath":"cashierId","order":"ASCENDING"},{"fieldPath":"status","order":"ASCENDING"}]},{"collectionGroup":"chartAccounts","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"},{"fieldPath":"accountType","order":"ASCENDING"}]},{"collectionGroup":"accountingPeriods","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"status","order":"ASCENDING"},{"fieldPath":"startDate","order":"ASCENDING"}]},{"collectionGroup":"journalEntries","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"branchId","order":"ASCENDING"},{"fieldPath":"postedAt","order":"DESCENDING"}]},{"collectionGroup":"financePostingRequests","queryScope":"COLLECTION","fields":[{"fieldPath":"status","order":"ASCENDING"},{"fieldPath":"nextRetryAt","order":"ASCENDING"}]},{"collectionGroup":"customers","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"}]},{"collectionGroup":"loyaltyPrograms","queryScope":"COLLECTION","fields":[{"fieldPath":"organizationId","order":"ASCENDING"},{"fieldPath":"active","order":"ASCENDING"},{"fieldPath":"effectiveFrom","order":"ASCENDING"}]},{"collectionGroup":"loyaltyTransactions","queryScope":"COLLECTION","fields":[{"fieldPath":"saleId","order":"ASCENDING"},{"fieldPath":"customerId","order":"ASCENDING"}]},{"collectionGroup":"loyaltyPostingRequests","queryScope":"COLLECTION","fields":[{"fieldPath":"status","order":"ASCENDING"},{"fieldPath":"nextRetryAt","order":"ASCENDING"}]}],"fieldOverrides":[]}
+{
+  "indexes": [
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "storeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visibleOnPOS",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "categoryId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "productCategories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visibleOnPOS",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sortOrder",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "productVariations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "productId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "productOptionAssignments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "productId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "optionItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "modifierGroupId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "taxConfigurationVersions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "taxProfileId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "paymentMethods",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "employeeBranchAssignments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "employeeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "branchId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "shifts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "storeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "cashierId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "chartAccounts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "accountType",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "accountingPeriods",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startDate",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "journalEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "branchId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "postedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "financePostingRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "nextRetryAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "customers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "loyaltyPrograms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "effectiveFrom",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "loyaltyTransactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "saleId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "customerId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "loyaltyPostingRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "nextRetryAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "queryScope": "COLLECTION",
+      "collectionGroup": "cashierSaleSummaries",
+      "fields": [
+        {
+          "order": "ASCENDING",
+          "fieldPath": "organizationId"
+        },
+        {
+          "order": "DESCENDING",
+          "fieldPath": "completedAt"
+        }
+      ]
+    },
+    {
+      "queryScope": "COLLECTION",
+      "collectionGroup": "cashierSaleSummaries",
+      "fields": [
+        {
+          "order": "ASCENDING",
+          "fieldPath": "organizationId"
+        },
+        {
+          "order": "ASCENDING",
+          "fieldPath": "branchId"
+        },
+        {
+          "order": "DESCENDING",
+          "fieldPath": "completedAt"
+        }
+      ]
+    },
+    {
+      "queryScope": "COLLECTION",
+      "collectionGroup": "cashierSaleSummaries",
+      "fields": [
+        {
+          "order": "ASCENDING",
+          "fieldPath": "organizationId"
+        },
+        {
+          "order": "ASCENDING",
+          "fieldPath": "branchId"
+        },
+        {
+          "order": "ASCENDING",
+          "fieldPath": "shiftId"
+        },
+        {
+          "order": "DESCENDING",
+          "fieldPath": "completedAt"
+        }
+      ]
+    },
+    {
+      "queryScope": "COLLECTION",
+      "collectionGroup": "cashierSaleSummaries",
+      "fields": [
+        {
+          "order": "ASCENDING",
+          "fieldPath": "organizationId"
+        },
+        {
+          "order": "ASCENDING",
+          "fieldPath": "receiptNumber"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
