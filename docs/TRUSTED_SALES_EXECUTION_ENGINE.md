@@ -1,3 +1,3 @@
 # Trusted Sales Execution Engine
 
-P4-002C.0 supplies server-side Finance, Loyalty, shift-total, and outbox contracts only. The callable does not yet invoke those contracts, so P4-002 and PILOT-002 remain open.
+P4-002C.1 invokes server-side Finance, Loyalty, and shift-total contracts within the trusted transaction. Pilot closure remains blocked until the full seeded callable-sale emulator matrix proves all critical effects and failure paths.

@@ -1,5 +1,9 @@
 import { HttpsError } from 'firebase-functions/https';
 import { consumeInventoryBatch } from '@abp/inventory-consumption';
+import { AccountRepository, AccountingPeriodRepository, JournalRepository, PostingConfigurationRepository, SaleFinanceResolver } from '../finance/index.js';
+import { CustomerRepository, LoyaltyBalanceRepository, LoyaltyTransactionRepository, LoyaltyProgramRepository, SaleLoyaltyResolver } from '../loyalty/index.js';
+import { ShiftTotalsRepository } from '../shifts/index.js';
+import { saleOutboxEventId } from '../outbox/index.js';
 const round = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 const hash = (value) => JSON.stringify(value);
 const assertRequest = (input) => {
@@ -19,6 +23,16 @@ export class FirestoreTrustedSaleRepository {
         assertRequest(command);
         const requestHash = hash({ branchId: command.requestedBranchId, shiftId: command.shiftId, cartLines: command.cartLines, payments: command.payments, customerId: command.customerId ?? null, notes: command.notes ?? null });
         const claim = this.db.collection('saleIdempotency').doc(`${context.organizationId}_${command.idempotencyKey}`);
+        const accounts = new AccountRepository(this.db);
+        const periods = new AccountingPeriodRepository(this.db);
+        const configurations = new PostingConfigurationRepository(this.db);
+        const finance = new SaleFinanceResolver(accounts, periods, configurations);
+        const customers = new CustomerRepository(this.db);
+        const loyalty = new SaleLoyaltyResolver(customers, new LoyaltyProgramRepository(this.db));
+        const loyaltyBalances = new LoyaltyBalanceRepository(this.db);
+        const loyaltyTransactions = new LoyaltyTransactionRepository(this.db);
+        const shiftTotals = new ShiftTotalsRepository(this.db);
+        const journal = new JournalRepository(this.db);
         return this.db.runTransaction(async (transaction) => {
             const existing = await transaction.get(claim);
             if (existing.exists) {
@@ -31,7 +45,6 @@ export class FirestoreTrustedSaleRepository {
                     throw new HttpsError('aborted', 'The sale is already being processed. Retry with the same key.');
             }
             const leaseExpiresAt = new Date(context.requestTimestamp.getTime() + 120_000);
-            transaction.set(claim, { idempotencyKey: command.idempotencyKey, organizationId: context.organizationId, branchId: command.requestedBranchId, requestHash, commandType: 'COMPLETE_SALE', status: 'CLAIMED', claimedAt: context.requestTimestamp, leaseExpiresAt, correlationId: context.correlationId }, { merge: true });
             const counter = this.db.collection('saleCounters').doc(`${context.organizationId}_${command.requestedBranchId}`);
             const counterSnapshot = await transaction.get(counter);
             const nextNumber = (counterSnapshot.data()?.nextNumber ?? 1);
@@ -64,12 +77,59 @@ export class FirestoreTrustedSaleRepository {
             }
             const saleRef = this.db.collection('orders').doc(saleId);
             const receiptRef = this.db.collection('receipts').doc(saleId);
-            const paymentRefs = command.payments.map(() => this.db.collection('payments').doc());
-            const auditRef = this.db.collection('auditLogs').doc();
-            const outboxRef = this.db.collection('outboxEvents').doc();
+            const paymentRefs = command.payments.map((_, index) => this.db.collection('payments').doc(`${saleId}-P${index + 1}`));
+            const auditRef = this.db.collection('auditLogs').doc(`SaleCompleted-${saleId}`);
+            const outboxRef = this.db.collection('outboxEvents').doc(`SaleCompleted-${saleId}`);
             const { confirmedCogs, provisionalCogs, estimatedCogs, cogsStatus } = inventory;
+            const shiftRef = this.db.collection('shifts').doc(command.shiftId);
+            const shift = await transaction.get(shiftRef);
+            const appliedShiftMarker = await transaction.get(this.db.collection('appliedShiftSales').doc(`${command.shiftId}-${saleId}`));
+            if (!shift.exists || shift.data()?.status !== 'OPEN')
+                throw new HttpsError('failed-precondition', 'The requested shift is not open.');
+            let financeStatus;
+            let financeJournalId = null;
+            let financeInstruction = null;
+            try {
+                const branch = await transaction.get(this.db.collection('branches').doc(command.requestedBranchId));
+                const timezone = typeof branch.data()?.timezone === 'string' ? branch.data()?.timezone : 'UTC';
+                const financeResolution = await finance.resolve({ saleId, organizationId: context.organizationId, branchId: command.requestedBranchId, businessDate: context.requestTimestamp, idempotencyKey: command.idempotencyKey, createdBy: context.authenticatedUserId, payments: command.payments.map((payment) => ({ paymentMethodId: payment.paymentMethodId, amount: payment.amount })), netSales: round(grandTotal - taxTotal), taxAmount: taxTotal, confirmedCogs, cogsStatus }, timezone);
+                if (financeResolution.status === 'READY' && financeResolution.instruction) {
+                    financeInstruction = financeResolution.instruction;
+                    financeStatus = 'POSTED';
+                }
+                else
+                    financeStatus = financeResolution.status;
+            }
+            catch (error) {
+                if (error instanceof HttpsError && error.code === 'failed-precondition')
+                    financeStatus = 'NOT_CONFIGURED';
+                else
+                    throw error;
+            }
+            let loyaltyStatus = command.customerId ? 'NOT_ENABLED' : 'NOT_APPLICABLE';
+            let loyaltySnapshot = null;
+            if (command.customerId) {
+                try {
+                    const loyaltyResolution = await loyalty.resolve({ organizationId: context.organizationId, branchId: command.requestedBranchId, customerId: command.customerId, netSales: grandTotal, now: context.requestTimestamp });
+                    loyaltyStatus = loyaltyResolution.status;
+                    loyaltySnapshot = { customer: loyaltyResolution.customer, program: loyaltyResolution.program ? { programId: loyaltyResolution.program.id } : null, pointsEarned: loyaltyResolution.pointsEarned };
+                    if (loyaltyResolution.status === 'READY' && loyaltyResolution.customer && loyaltyResolution.pointsEarned > 0) {
+                        const balance = await loyaltyBalances.getBalanceInTransaction(transaction, context.organizationId, loyaltyResolution.customer.customerId);
+                        loyaltyBalances.applyEarn(transaction, balance, loyaltyResolution.pointsEarned, context.requestTimestamp);
+                        loyaltyTransactions.createOnce(transaction, { saleId, organizationId: context.organizationId, customerId: loyaltyResolution.customer.customerId, type: 'EARN', points: loyaltyResolution.pointsEarned, createdBy: context.authenticatedUserId, idempotencyKey: command.idempotencyKey }, balance.availablePoints, balance.availablePoints + loyaltyResolution.pointsEarned, context.requestTimestamp);
+                        loyaltyStatus = 'POSTED';
+                    }
+                }
+                catch {
+                    loyaltyStatus = 'FAILED_RETRYABLE';
+                    transaction.set(this.db.collection('loyaltyPostingRequests').doc(saleOutboxEventId('SaleLoyaltyRequested', saleId)), { id: saleOutboxEventId('SaleLoyaltyRequested', saleId), organizationId: context.organizationId, branchId: command.requestedBranchId, saleId, status: 'PENDING', attemptCount: 0, nextRetryAt: context.requestTimestamp, createdAt: context.requestTimestamp, updatedAt: context.requestTimestamp });
+                }
+            }
+            if (financeInstruction)
+                financeJournalId = journal.createBalanced(transaction, financeInstruction, context.requestTimestamp);
+            transaction.set(claim, { idempotencyKey: command.idempotencyKey, organizationId: context.organizationId, branchId: command.requestedBranchId, requestHash, commandType: 'COMPLETE_SALE', status: 'CLAIMED', claimedAt: context.requestTimestamp, leaseExpiresAt, correlationId: context.correlationId }, { merge: true });
             transaction.set(counter, { nextNumber: nextNumber + 1, updatedAt: context.requestTimestamp }, { merge: true });
-            transaction.set(saleRef, { id: saleId, organizationId: context.organizationId, storeId: command.requestedBranchId, shiftId: command.shiftId, cashierUserId: context.authenticatedUserId, employeeId: context.employeeId, receiptNumber, idempotencyKey: command.idempotencyKey, correlationId: context.correlationId, status: 'COMPLETED', immutable: true, createdAt: context.requestTimestamp, completedAt: context.requestTimestamp, grossAmount: round(lineTotals.reduce((sum, line) => sum + line.gross, 0)), discountAmount: 0, taxAmount: taxTotal, grandTotal, confirmedCogs, provisionalCogs, estimatedCogs, cogsStatus, financeStatus: 'PENDING', loyaltyStatus: command.customerId ? 'PENDING' : 'NOT_APPLICABLE', lines: lineTotals.map(({ line, gross, tax, net }, index) => ({ id: `${saleId}-L${index + 1}`, productSnapshot: line.product, categorySnapshot: line.category, variationSnapshot: line.variation ?? null, recipeSnapshot: line.recipe ?? null, optionSnapshots: line.options, quantity: line.quantity, unitPrice: line.unitPrice, grossAmount: gross, discountAmount: 0, netAmount: net, taxSnapshot: { ...line.tax, taxableAmount: gross, taxAmount: tax, taxInclusiveAmount: line.tax.calculationMode === 'TAX_INCLUSIVE' ? gross : 0, taxExclusiveAmount: line.tax.calculationMode === 'TAX_EXCLUSIVE' ? gross : 0, zeroRatedAmount: line.tax.taxType === 'ZERO_RATED' ? gross : 0, exemptAmount: line.tax.taxType === 'EXEMPT' ? gross : 0, roundingAdjustment: 0 } })) });
+            transaction.set(saleRef, { id: saleId, organizationId: context.organizationId, storeId: command.requestedBranchId, shiftId: command.shiftId, cashierUserId: context.authenticatedUserId, employeeId: context.employeeId, receiptNumber, idempotencyKey: command.idempotencyKey, correlationId: context.correlationId, status: 'COMPLETED', immutable: true, createdAt: context.requestTimestamp, completedAt: context.requestTimestamp, grossAmount: round(lineTotals.reduce((sum, line) => sum + line.gross, 0)), discountAmount: 0, taxAmount: taxTotal, grandTotal, confirmedCogs, provisionalCogs, estimatedCogs, cogsStatus, financeStatus, financeJournalId, loyaltyStatus, loyaltySnapshot, lines: lineTotals.map(({ line, gross, tax, net }, index) => ({ id: `${saleId}-L${index + 1}`, productSnapshot: line.product, categorySnapshot: line.category, variationSnapshot: line.variation ?? null, recipeSnapshot: line.recipe ?? null, optionSnapshots: line.options, quantity: line.quantity, unitPrice: line.unitPrice, grossAmount: gross, discountAmount: 0, netAmount: net, taxSnapshot: { ...line.tax, taxableAmount: gross, taxAmount: tax, taxInclusiveAmount: line.tax.calculationMode === 'TAX_INCLUSIVE' ? gross : 0, taxExclusiveAmount: line.tax.calculationMode === 'TAX_EXCLUSIVE' ? gross : 0, zeroRatedAmount: line.tax.taxType === 'ZERO_RATED' ? gross : 0, exemptAmount: line.tax.taxType === 'EXEMPT' ? gross : 0, roundingAdjustment: 0 } })) });
             let movementIndex = 0;
             inventory.results.forEach(({ input, result }) => { result.updatedBatches.forEach((batch) => transaction.set(this.db.collection('inventoryBatches').doc(batch.id), { remainingQuantity: batch.remainingQuantity, status: batch.status, updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId }, { merge: true })); transaction.set(this.db.collection('inventoryBalances').doc(`${command.requestedBranchId}_${input.request.ingredientId}`), { ...result.resultingBalance, updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId }, { merge: true }); result.batchAllocations.forEach((allocation) => { movementIndex += 1; transaction.set(this.db.collection('stockMovements').doc(`${saleId}-C${movementIndex}`), { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, saleLineId: input.metadata?.saleLineId ?? null, ingredientId: input.request.ingredientId, batchId: allocation.inventoryBatchId, quantity: allocation.quantity, baseUnitId: allocation.unitId, unitCost: allocation.unitCost, totalCost: allocation.totalCost, provisional: false, movementType: 'SALE_CONSUMPTION', movementTimestamp: context.requestTimestamp, actorUserId: context.authenticatedUserId, correlationId: context.correlationId, immutable: true }); }); if (result.negativeAllocation) {
                 movementIndex += 1;
@@ -79,11 +139,7 @@ export class FirestoreTrustedSaleRepository {
             transaction.set(receiptRef, { id: saleId, organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, receiptNumber, issuedAt: context.requestTimestamp, cashierUserId: context.authenticatedUserId, lines: lineTotals.map(({ line, gross, tax, net }) => ({ product: line.product, variation: line.variation ?? null, options: line.options, quantity: line.quantity, grossAmount: gross, taxAmount: tax, netAmount: net })), payments: command.payments, taxAmount: taxTotal, grandTotal, changeAmount, immutable: true });
             transaction.set(auditRef, { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, receiptNumber, actorUserId: context.authenticatedUserId, employeeId: context.employeeId ?? null, shiftId: command.shiftId, idempotencyKey: command.idempotencyKey, correlationId: context.correlationId, event: 'SaleCompleted', occurredAt: context.requestTimestamp, immutable: true });
             transaction.set(outboxRef, { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, correlationId: context.correlationId, eventType: 'SaleCompleted', status: 'PENDING', createdAt: context.requestTimestamp, idempotencyKey: command.idempotencyKey });
-            const shiftRef = this.db.collection('shifts').doc(command.shiftId);
-            const shift = await transaction.get(shiftRef);
-            if (!shift.exists || shift.data()?.status !== 'OPEN')
-                throw new HttpsError('failed-precondition', 'The requested shift is not open.');
-            transaction.update(shiftRef, { totalTransactions: (shift.data()?.totalTransactions ?? 0) + 1, totalSales: round((shift.data()?.totalSales ?? 0) + grandTotal), expectedCash: round((shift.data()?.expectedCash ?? 0) + command.payments.filter((payment) => resolved.paymentMethods.find((method) => method.paymentMethodId === payment.paymentMethodId)?.code === 'CASH').reduce((sum, payment) => sum + payment.amount, 0)), updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId });
+            await shiftTotals.applyCommittedSaleOnce(transaction, this.db.collection('shiftTotals').doc(command.shiftId), { saleId, organizationId: context.organizationId, branchId: command.requestedBranchId, shiftId: command.shiftId, currencyCode: resolved.currencyCode, grossSales: round(lineTotals.reduce((sum, line) => sum + line.gross, 0)), discounts: 0, netSales: grandTotal - taxTotal, tax: taxTotal, confirmedCogs, provisionalCogs, payments: command.payments.map((payment) => ({ amount: payment.amount, settlementCategory: resolved.paymentMethods.find((method) => method.paymentMethodId === payment.paymentMethodId)?.settlementCategory })) }, context.requestTimestamp, appliedShiftMarker.exists);
             const result = { saleId, receiptNumber, grandTotal, taxTotal, changeAmount, correlationId: context.correlationId, cogsStatus };
             transaction.set(claim, { status: 'COMPLETED', saleId, resultSnapshot: result, completedAt: context.requestTimestamp, leaseExpiresAt: null }, { merge: true });
             return result;
