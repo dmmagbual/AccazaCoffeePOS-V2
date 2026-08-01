@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CatalogReadModel = void 0;
-class CatalogReadModel {
+export class CatalogReadModel {
     categories;
     products;
     variations;
@@ -20,4 +17,3 @@ class CatalogReadModel {
         return { categories, products: entries.filter((value) => value !== null), updatedAt: new Date(), version: 'server-catalog-v1' };
     }
 }
-exports.CatalogReadModel = CatalogReadModel;

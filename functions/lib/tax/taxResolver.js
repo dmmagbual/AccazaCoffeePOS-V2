@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TaxResolver = void 0;
-class TaxResolver {
+export class TaxResolver {
     repository;
     constructor(repository) {
         this.repository = repository;
@@ -14,4 +11,3 @@ class TaxResolver {
         return { taxProfileId: profile.id, taxConfigurationVersionId: version.id, taxCode: profile.code, taxName: profile.name, taxType: profile.taxType, rateApplied: version.rate, calculationMode: version.calculationMode, roundingMethod: version.roundingMethod, roundingPrecision: version.roundingPrecision, ...(profile.taxPayableAccountId ? { taxPayableAccountId: profile.taxPayableAccountId } : {}) };
     }
 }
-exports.TaxResolver = TaxResolver;

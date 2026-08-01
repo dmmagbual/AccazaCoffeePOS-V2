@@ -10,6 +10,7 @@ The format is based on Keep a Changelog, and the project follows Semantic Versio
 - Added Functions request-context and emulator test fixtures; local emulator execution requires Java.
 - Added server-only catalog, recipe, tax, payment, branch-authorization, and trusted-sale input resolver foundations; no public sale handler was added.
 - Added the `@abp/inventory-consumption` workspace package shared by application and Functions builds.
+- Refactored trusted-sale inventory effects to consume the shared inventory package.
 
 ### Added
 - Recipe Master lifecycle, immutable numbering, ownership, permission-gated

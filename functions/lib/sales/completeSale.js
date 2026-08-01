@@ -1,25 +1,16 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.FirestoreTrustedSaleRepository = void 0;
-const https_1 = require("firebase-functions/https");
+import { HttpsError } from 'firebase-functions/https';
+import { consumeInventoryBatch } from '@abp/inventory-consumption';
 const round = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 const hash = (value) => JSON.stringify(value);
 const assertRequest = (input) => {
     if (!input.idempotencyKey || !input.requestedBranchId || !input.shiftId || !input.cartLines.length || !input.payments.length)
-        throw new https_1.HttpsError('invalid-argument', 'A complete sale command requires identifiers, lines, and payments.');
+        throw new HttpsError('invalid-argument', 'A complete sale command requires identifiers, lines, and payments.');
     if (input.cartLines.some((line) => !line.clientLineId || !line.productId || !Number.isInteger(line.quantity) || line.quantity < 1))
-        throw new https_1.HttpsError('invalid-argument', 'Sale line input is invalid.');
+        throw new HttpsError('invalid-argument', 'Sale line input is invalid.');
     if (input.payments.some((payment) => !payment.paymentMethodId || payment.amount < 0 || !payment.currencyCode))
-        throw new https_1.HttpsError('invalid-argument', 'Payment input is invalid.');
+        throw new HttpsError('invalid-argument', 'Payment input is invalid.');
 };
-const allocateFifo = (quantity, batches) => { let remaining = quantity; const allocations = []; for (const batch of [...batches].filter((batch) => batch.status === 'available' && batch.remainingQuantity > 0).sort((a, b) => a.receivedDate.getTime() - b.receivedDate.getTime())) {
-    if (remaining <= 0)
-        break;
-    const allocated = Math.min(remaining, batch.remainingQuantity);
-    remaining = round(remaining - allocated);
-    allocations.push({ batch, quantity: allocated, cost: round(allocated * batch.unitCost) });
-} return { allocations, remaining, confirmed: round(allocations.reduce((total, allocation) => total + allocation.cost, 0)) }; };
-class FirestoreTrustedSaleRepository {
+export class FirestoreTrustedSaleRepository {
     db;
     constructor(db) {
         this.db = db;
@@ -33,11 +24,11 @@ class FirestoreTrustedSaleRepository {
             if (existing.exists) {
                 const data = existing.data();
                 if (data.requestHash !== requestHash)
-                    throw new https_1.HttpsError('already-exists', 'This idempotency key was used for a different request.');
+                    throw new HttpsError('already-exists', 'This idempotency key was used for a different request.');
                 if (data.status === 'COMPLETED' && data.resultSnapshot)
                     return data.resultSnapshot;
                 if (data.status === 'CLAIMED' && data.leaseExpiresAt && data.leaseExpiresAt.toDate() > context.requestTimestamp)
-                    throw new https_1.HttpsError('aborted', 'The sale is already being processed. Retry with the same key.');
+                    throw new HttpsError('aborted', 'The sale is already being processed. Retry with the same key.');
             }
             const leaseExpiresAt = new Date(context.requestTimestamp.getTime() + 120_000);
             transaction.set(claim, { idempotencyKey: command.idempotencyKey, organizationId: context.organizationId, branchId: command.requestedBranchId, requestHash, commandType: 'COMPLETE_SALE', status: 'CLAIMED', claimedAt: context.requestTimestamp, leaseExpiresAt, correlationId: context.correlationId }, { merge: true });
@@ -53,38 +44,37 @@ class FirestoreTrustedSaleRepository {
             const cashTendered = command.payments.reduce((sum, payment) => sum + (payment.tenderedAmount ?? 0), 0);
             const changeAmount = round(Math.max(0, cashTendered - grandTotal));
             if (paid < grandTotal || (paid !== grandTotal && changeAmount === 0))
-                throw new https_1.HttpsError('failed-precondition', 'Payments do not reconcile to the authoritative amount due.');
-            const consumptionRequirements = lineTotals.flatMap(({ line }, lineIndex) => (line.recipe?.ingredientRequirements ?? []).filter((requirement) => !requirement.optional).map((requirement) => ({ lineIndex, ingredientId: requirement.ingredientId, quantity: round(requirement.baseUnitQuantity * line.quantity), unitId: requirement.unitId })));
-            let confirmedCogs = 0;
-            let provisionalCogs = 0;
-            const movements = [];
-            for (const requirement of consumptionRequirements) {
-                const batchesQuery = this.db.collection('inventoryBatches').where('organizationId', '==', context.organizationId).where('storeId', '==', command.requestedBranchId).where('ingredientId', '==', requirement.ingredientId);
-                const batchSnapshots = await transaction.get(batchesQuery);
-                const batches = batchSnapshots.docs.map((document) => { const data = document.data(); return { id: document.id, remainingQuantity: data.remainingQuantity, unitCost: data.unitCost, receivedDate: data.receivedDate.toDate(), status: data.status, unitId: data.unitId }; });
-                const allocation = allocateFifo(requirement.quantity, batches);
-                const ingredientSnapshot = await transaction.get(this.db.collection('ingredients').doc(requirement.ingredientId));
-                const negativeAllowed = ingredientSnapshot.exists && ingredientSnapshot.data()?.negativeInventoryAllowed === true;
-                if (allocation.remaining > 0 && !negativeAllowed)
-                    throw new https_1.HttpsError('failed-precondition', 'Inventory is insufficient and negative inventory is prohibited.');
-                allocation.allocations.forEach((item) => { transaction.update(this.db.collection('inventoryBatches').doc(item.batch.id), { remainingQuantity: round(item.batch.remainingQuantity - item.quantity), status: round(item.batch.remainingQuantity - item.quantity) === 0 ? 'depleted' : 'available', updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId }); movements.push({ lineIndex: requirement.lineIndex, ingredientId: requirement.ingredientId, batchId: item.batch.id, quantity: item.quantity, unitCost: item.batch.unitCost, provisional: false, unitId: requirement.unitId }); });
-                confirmedCogs = round(confirmedCogs + allocation.confirmed);
-                if (allocation.remaining > 0) {
-                    const fallbackUnitCost = batches[0]?.unitCost ?? 0;
-                    const cost = round(allocation.remaining * fallbackUnitCost);
-                    provisionalCogs = round(provisionalCogs + cost);
-                    movements.push({ lineIndex: requirement.lineIndex, ingredientId: requirement.ingredientId, batchId: null, quantity: allocation.remaining, unitCost: fallbackUnitCost, provisional: true, unitId: requirement.unitId });
-                }
+                throw new HttpsError('failed-precondition', 'Payments do not reconcile to the authoritative amount due.');
+            const requirements = lineTotals.flatMap(({ line }, lineIndex) => (line.recipe?.ingredientRequirements ?? []).filter((requirement) => !requirement.optional).map((requirement) => ({ lineIndex, ingredientId: requirement.ingredientId, quantity: round(requirement.baseUnitQuantity * line.quantity), unitId: requirement.unitId })));
+            const inputs = [];
+            for (const requirement of requirements) {
+                const batchSnapshots = await transaction.get(this.db.collection('inventoryBatches').where('organizationId', '==', context.organizationId).where('storeId', '==', command.requestedBranchId).where('ingredientId', '==', requirement.ingredientId));
+                const batches = batchSnapshots.docs.map((document) => ({ id: document.id, ...document.data() }));
+                const balanceSnapshot = await transaction.get(this.db.collection('inventoryBalances').doc(`${command.requestedBranchId}_${requirement.ingredientId}`));
+                const balance = balanceSnapshot.exists ? balanceSnapshot.data() : { organizationId: context.organizationId, storeId: command.requestedBranchId, ingredientId: requirement.ingredientId, quantityOnHand: batches.reduce((sum, batch) => sum + batch.remainingQuantity, 0), baseUnitId: requirement.unitId, allocatedPositiveQuantity: 0, negativeQuantity: 0, inventoryValue: 0, provisionalNegativeValue: 0, status: 'IN_STOCK', reconciliationRequired: false, lastMovementAt: context.requestTimestamp, updatedAt: context.requestTimestamp };
+                const ingredient = await transaction.get(this.db.collection('ingredients').doc(requirement.ingredientId));
+                inputs.push({ request: { organizationId: context.organizationId, storeId: command.requestedBranchId, ingredientId: requirement.ingredientId, quantity: requirement.quantity, unitId: requirement.unitId, baseUnitId: requirement.unitId, conversionFactor: 1, consumptionType: 'SALE_CONSUMPTION', referenceType: 'SALE', referenceId: saleId, referenceNumber: receiptNumber, occurredAt: context.requestTimestamp, performedBy: context.authenticatedUserId, shiftId: command.shiftId, idempotencyKey: command.idempotencyKey }, batches, balance, negativeAllowed: ingredient.exists && ingredient.data()?.negativeInventoryAllowed === true, metadata: { saleLineId: `${saleId}-L${requirement.lineIndex + 1}` } });
+            }
+            let inventory;
+            try {
+                inventory = consumeInventoryBatch(inputs);
+            }
+            catch {
+                throw new HttpsError('failed-precondition', 'Inventory is insufficient and negative inventory is prohibited.');
             }
             const saleRef = this.db.collection('orders').doc(saleId);
             const receiptRef = this.db.collection('receipts').doc(saleId);
             const paymentRefs = command.payments.map(() => this.db.collection('payments').doc());
             const auditRef = this.db.collection('auditLogs').doc();
             const outboxRef = this.db.collection('outboxEvents').doc();
-            const cogsStatus = provisionalCogs > 0 ? confirmedCogs > 0 ? 'MIXED' : 'PROVISIONAL' : consumptionRequirements.length > 0 ? 'CONFIRMED' : 'UNAVAILABLE';
+            const { confirmedCogs, provisionalCogs, estimatedCogs, cogsStatus } = inventory;
             transaction.set(counter, { nextNumber: nextNumber + 1, updatedAt: context.requestTimestamp }, { merge: true });
-            transaction.set(saleRef, { id: saleId, organizationId: context.organizationId, storeId: command.requestedBranchId, shiftId: command.shiftId, cashierUserId: context.authenticatedUserId, employeeId: context.employeeId, receiptNumber, idempotencyKey: command.idempotencyKey, correlationId: context.correlationId, status: 'COMPLETED', immutable: true, createdAt: context.requestTimestamp, completedAt: context.requestTimestamp, grossAmount: round(lineTotals.reduce((sum, line) => sum + line.gross, 0)), discountAmount: 0, taxAmount: taxTotal, grandTotal, confirmedCogs, provisionalCogs, estimatedCogs: round(confirmedCogs + provisionalCogs), cogsStatus, financeStatus: 'PENDING', loyaltyStatus: command.customerId ? 'PENDING' : 'NOT_APPLICABLE', lines: lineTotals.map(({ line, gross, tax, net }, index) => ({ id: `${saleId}-L${index + 1}`, productSnapshot: line.product, categorySnapshot: line.category, variationSnapshot: line.variation ?? null, recipeSnapshot: line.recipe ?? null, optionSnapshots: line.options, quantity: line.quantity, unitPrice: line.unitPrice, grossAmount: gross, discountAmount: 0, netAmount: net, taxSnapshot: { ...line.tax, taxableAmount: gross, taxAmount: tax, taxInclusiveAmount: line.tax.calculationMode === 'TAX_INCLUSIVE' ? gross : 0, taxExclusiveAmount: line.tax.calculationMode === 'TAX_EXCLUSIVE' ? gross : 0, zeroRatedAmount: line.tax.taxType === 'ZERO_RATED' ? gross : 0, exemptAmount: line.tax.taxType === 'EXEMPT' ? gross : 0, roundingAdjustment: 0 } })) });
-            movements.forEach((movement, index) => transaction.set(this.db.collection('stockMovements').doc(`${saleId}-C${index + 1}`), { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, saleLineId: `${saleId}-L${movement.lineIndex + 1}`, ingredientId: movement.ingredientId, batchId: movement.batchId, quantity: movement.quantity, baseUnitId: movement.unitId, unitCost: movement.unitCost, totalCost: round(movement.quantity * movement.unitCost), provisional: movement.provisional, movementType: 'SALE_CONSUMPTION', movementTimestamp: context.requestTimestamp, actorUserId: context.authenticatedUserId, correlationId: context.correlationId, immutable: true }));
+            transaction.set(saleRef, { id: saleId, organizationId: context.organizationId, storeId: command.requestedBranchId, shiftId: command.shiftId, cashierUserId: context.authenticatedUserId, employeeId: context.employeeId, receiptNumber, idempotencyKey: command.idempotencyKey, correlationId: context.correlationId, status: 'COMPLETED', immutable: true, createdAt: context.requestTimestamp, completedAt: context.requestTimestamp, grossAmount: round(lineTotals.reduce((sum, line) => sum + line.gross, 0)), discountAmount: 0, taxAmount: taxTotal, grandTotal, confirmedCogs, provisionalCogs, estimatedCogs, cogsStatus, financeStatus: 'PENDING', loyaltyStatus: command.customerId ? 'PENDING' : 'NOT_APPLICABLE', lines: lineTotals.map(({ line, gross, tax, net }, index) => ({ id: `${saleId}-L${index + 1}`, productSnapshot: line.product, categorySnapshot: line.category, variationSnapshot: line.variation ?? null, recipeSnapshot: line.recipe ?? null, optionSnapshots: line.options, quantity: line.quantity, unitPrice: line.unitPrice, grossAmount: gross, discountAmount: 0, netAmount: net, taxSnapshot: { ...line.tax, taxableAmount: gross, taxAmount: tax, taxInclusiveAmount: line.tax.calculationMode === 'TAX_INCLUSIVE' ? gross : 0, taxExclusiveAmount: line.tax.calculationMode === 'TAX_EXCLUSIVE' ? gross : 0, zeroRatedAmount: line.tax.taxType === 'ZERO_RATED' ? gross : 0, exemptAmount: line.tax.taxType === 'EXEMPT' ? gross : 0, roundingAdjustment: 0 } })) });
+            let movementIndex = 0;
+            inventory.results.forEach(({ input, result }) => { result.updatedBatches.forEach((batch) => transaction.set(this.db.collection('inventoryBatches').doc(batch.id), { remainingQuantity: batch.remainingQuantity, status: batch.status, updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId }, { merge: true })); transaction.set(this.db.collection('inventoryBalances').doc(`${command.requestedBranchId}_${input.request.ingredientId}`), { ...result.resultingBalance, updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId }, { merge: true }); result.batchAllocations.forEach((allocation) => { movementIndex += 1; transaction.set(this.db.collection('stockMovements').doc(`${saleId}-C${movementIndex}`), { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, saleLineId: input.metadata?.saleLineId ?? null, ingredientId: input.request.ingredientId, batchId: allocation.inventoryBatchId, quantity: allocation.quantity, baseUnitId: allocation.unitId, unitCost: allocation.unitCost, totalCost: allocation.totalCost, provisional: false, movementType: 'SALE_CONSUMPTION', movementTimestamp: context.requestTimestamp, actorUserId: context.authenticatedUserId, correlationId: context.correlationId, immutable: true }); }); if (result.negativeAllocation) {
+                movementIndex += 1;
+                transaction.set(this.db.collection('stockMovements').doc(`${saleId}-C${movementIndex}`), { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, saleLineId: input.metadata?.saleLineId ?? null, ingredientId: input.request.ingredientId, batchId: null, quantity: result.negativeAllocation.quantity, baseUnitId: result.negativeAllocation.unitId, unitCost: result.negativeAllocation.estimatedUnitCost, totalCost: result.negativeAllocation.estimatedTotalCost, provisional: true, movementType: 'SALE_CONSUMPTION', movementTimestamp: context.requestTimestamp, actorUserId: context.authenticatedUserId, correlationId: context.correlationId, reconciliationExposure: result.negativeAllocation, immutable: true });
+            } });
             command.payments.forEach((payment, index) => transaction.set(paymentRefs[index], { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, paymentMethodId: payment.paymentMethodId, paymentMethodSnapshot: resolved.paymentMethods.find((method) => method.paymentMethodId === payment.paymentMethodId) ?? null, amount: payment.amount, currencyCode: payment.currencyCode, transactionReference: payment.transactionReference ?? null, tenderedAmount: payment.tenderedAmount ?? null, changeAmount: index === 0 ? changeAmount : 0, immutable: true, createdAt: context.requestTimestamp }));
             transaction.set(receiptRef, { id: saleId, organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, receiptNumber, issuedAt: context.requestTimestamp, cashierUserId: context.authenticatedUserId, lines: lineTotals.map(({ line, gross, tax, net }) => ({ product: line.product, variation: line.variation ?? null, options: line.options, quantity: line.quantity, grossAmount: gross, taxAmount: tax, netAmount: net })), payments: command.payments, taxAmount: taxTotal, grandTotal, changeAmount, immutable: true });
             transaction.set(auditRef, { organizationId: context.organizationId, storeId: command.requestedBranchId, saleId, receiptNumber, actorUserId: context.authenticatedUserId, employeeId: context.employeeId ?? null, shiftId: command.shiftId, idempotencyKey: command.idempotencyKey, correlationId: context.correlationId, event: 'SaleCompleted', occurredAt: context.requestTimestamp, immutable: true });
@@ -92,7 +82,7 @@ class FirestoreTrustedSaleRepository {
             const shiftRef = this.db.collection('shifts').doc(command.shiftId);
             const shift = await transaction.get(shiftRef);
             if (!shift.exists || shift.data()?.status !== 'OPEN')
-                throw new https_1.HttpsError('failed-precondition', 'The requested shift is not open.');
+                throw new HttpsError('failed-precondition', 'The requested shift is not open.');
             transaction.update(shiftRef, { totalTransactions: (shift.data()?.totalTransactions ?? 0) + 1, totalSales: round((shift.data()?.totalSales ?? 0) + grandTotal), expectedCash: round((shift.data()?.expectedCash ?? 0) + command.payments.filter((payment) => resolved.paymentMethods.find((method) => method.paymentMethodId === payment.paymentMethodId)?.code === 'CASH').reduce((sum, payment) => sum + payment.amount, 0)), updatedAt: context.requestTimestamp, updatedBy: context.authenticatedUserId });
             const result = { saleId, receiptNumber, grandTotal, taxTotal, changeAmount, correlationId: context.correlationId, cogsStatus };
             transaction.set(claim, { status: 'COMPLETED', saleId, resultSnapshot: result, completedAt: context.requestTimestamp, leaseExpiresAt: null }, { merge: true });
@@ -100,4 +90,3 @@ class FirestoreTrustedSaleRepository {
         });
     }
 }
-exports.FirestoreTrustedSaleRepository = FirestoreTrustedSaleRepository;
