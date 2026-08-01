@@ -204,11 +204,11 @@ service cloud.firestore {
       allow write: if false;
     }
     match /receipts/{id} {
-      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow read: if (storeScope(resource.data) || branchScope(resource.data) || (orgScope(resource.data) && can('branches.all'))) && can('operations.read');
       allow write: if false;
     }
     match /cashierSaleSummaries/{id} {
-      allow read: if sameOrg(resource.data.organizationId) && (sameBranch(resource.data.branchId) || can('branches.all')) && can('operations.read');
+      allow read: if sameOrg(resource.data.organizationId) && (can('branches.all') || sameBranch(resource.data.branchId)) && can('operations.read');
       allow write: if false;
     }
     match /shifts/{id} {
