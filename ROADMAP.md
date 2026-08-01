@@ -1,5 +1,9 @@
 ## P4-001A.0 — Firebase Functions Server Foundation
 
+## P4-002G — Historical Snapshot Immutability Audit
+
+Historical snapshot mutation coverage is verified by emulator test. P4-002, PILOT-002, and PILOT-003 remain open pending the remaining closure matrix and legacy/incomplete-snapshot read contract.
+
 Functions build, lint, and non-emulator tests are available. Emulator verification remains blocked locally until a supported Java runtime is installed on `PATH`. P4-001A repositories and P4-002 remain open.
 
 ## P4-001A.1 — Server Catalog Repositories

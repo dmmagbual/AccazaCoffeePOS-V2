@@ -24,7 +24,7 @@ export type SalePersistenceStage = typeof salePersistenceStages[number]
 export interface TrustedSaleExecutionOptions { onPersistenceStage?: (stage: SalePersistenceStage) => void | Promise<void> }
 
 const round = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100
-const hash = (value: unknown) => JSON.stringify(value)
+export const completeSaleRequestHash = (command: CompleteSaleRequest) => JSON.stringify({ branchId: command.requestedBranchId, shiftId: command.shiftId, cartLines: command.cartLines, payments: command.payments, customerId: command.customerId ?? null, notes: command.notes ?? null })
 const decimalRatio = (value: string): readonly [bigint, bigint] => { const [whole, fraction = ''] = value.split('.'); const digits = `${whole}${fraction}`; return [BigInt(digits || '0'), 10n ** BigInt(fraction.length)] }
 const roundDivision = (numerator: bigint, denominator: bigint): bigint => (numerator + denominator / 2n) / denominator
 const calculateTax = (amount: number, tax: TrustedResolvedSaleInput['lines'][number]['tax']) => {
@@ -40,7 +40,7 @@ const assertRequest = (input: CompleteSaleRequest) => {
 export class FirestoreTrustedSaleRepository {
   constructor(private readonly db: Firestore, private readonly options: TrustedSaleExecutionOptions = {}) {}
   async execute(command: CompleteSaleRequest, context: TrustedRequestContext, resolved: TrustedResolvedSaleInput): Promise<CompleteSaleResult> {
-    assertRequest(command); const requestHash = hash({ branchId: command.requestedBranchId, shiftId: command.shiftId, cartLines: command.cartLines, payments: command.payments, customerId: command.customerId ?? null, notes: command.notes ?? null }); const claim = this.db.collection('saleIdempotency').doc(`${context.organizationId}_${command.idempotencyKey}`); const accounts = new AccountRepository(this.db); const periods = new AccountingPeriodRepository(this.db); const configurations = new PostingConfigurationRepository(this.db); const finance = new SaleFinanceResolver(accounts, periods, configurations); const customers = new CustomerRepository(this.db); const loyalty = new SaleLoyaltyResolver(customers, new LoyaltyProgramRepository(this.db)); const loyaltyBalances = new LoyaltyBalanceRepository(this.db); const loyaltyTransactions = new LoyaltyTransactionRepository(this.db); const shiftTotals = new ShiftTotalsRepository(this.db); const journal = new JournalRepository(this.db)
+    assertRequest(command); const requestHash = completeSaleRequestHash(command); const claim = this.db.collection('saleIdempotency').doc(`${context.organizationId}_${command.idempotencyKey}`); const accounts = new AccountRepository(this.db); const periods = new AccountingPeriodRepository(this.db); const configurations = new PostingConfigurationRepository(this.db); const finance = new SaleFinanceResolver(accounts, periods, configurations); const customers = new CustomerRepository(this.db); const loyalty = new SaleLoyaltyResolver(customers, new LoyaltyProgramRepository(this.db)); const loyaltyBalances = new LoyaltyBalanceRepository(this.db); const loyaltyTransactions = new LoyaltyTransactionRepository(this.db); const shiftTotals = new ShiftTotalsRepository(this.db); const journal = new JournalRepository(this.db)
     return this.db.runTransaction(async (transaction) => {
       const checkpoint = async (stage: SalePersistenceStage) => { await this.options.onPersistenceStage?.(stage) }
       const existing = await transaction.get(claim)

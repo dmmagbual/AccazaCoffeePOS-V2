@@ -41,3 +41,7 @@ Acceptance: all critical P4-002 emulator tests pass and docs/UAT accurately reco
 ## Closure rule
 
 Only after E1 through E4 pass in the emulator may `P4-002` and `PILOT-002` be marked complete. `PILOT-003` remains open until the tax snapshot historical/finance evidence in E1 and E4 passes.
+
+## P4-002G update
+
+The historical master-data mutation path is verified. Remaining snapshot work is a safe explicit legacy/incomplete read state for malformed or missing persisted snapshots, plus independent historical view coverage; live master data must never be substituted.

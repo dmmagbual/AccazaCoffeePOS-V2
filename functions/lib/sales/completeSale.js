@@ -7,7 +7,7 @@ import { saleOutboxEventId } from '../outbox/index.js';
 import { PaymentMethodRepository } from '../payments/index.js';
 export const salePersistenceStages = ['afterIdempotencyClaim', 'afterSaleDocument', 'afterReceiptCreation', 'afterPaymentPersistence', 'afterFifoAllocation', 'afterSaleConsumptionCreation', 'afterInventoryBalanceMutation', 'afterCogsPersistence', 'afterJournalCreation', 'afterLoyaltyPersistence', 'afterShiftTotals', 'afterAuditCreation', 'afterOutboxPersistence', 'beforeCommit'];
 const round = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
-const hash = (value) => JSON.stringify(value);
+export const completeSaleRequestHash = (command) => JSON.stringify({ branchId: command.requestedBranchId, shiftId: command.shiftId, cartLines: command.cartLines, payments: command.payments, customerId: command.customerId ?? null, notes: command.notes ?? null });
 const decimalRatio = (value) => { const [whole, fraction = ''] = value.split('.'); const digits = `${whole}${fraction}`; return [BigInt(digits || '0'), 10n ** BigInt(fraction.length)]; };
 const roundDivision = (numerator, denominator) => (numerator + denominator / 2n) / denominator;
 const calculateTax = (amount, tax) => {
@@ -39,7 +39,7 @@ export class FirestoreTrustedSaleRepository {
     }
     async execute(command, context, resolved) {
         assertRequest(command);
-        const requestHash = hash({ branchId: command.requestedBranchId, shiftId: command.shiftId, cartLines: command.cartLines, payments: command.payments, customerId: command.customerId ?? null, notes: command.notes ?? null });
+        const requestHash = completeSaleRequestHash(command);
         const claim = this.db.collection('saleIdempotency').doc(`${context.organizationId}_${command.idempotencyKey}`);
         const accounts = new AccountRepository(this.db);
         const periods = new AccountingPeriodRepository(this.db);

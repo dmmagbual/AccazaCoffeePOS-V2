@@ -73,3 +73,7 @@ Evidence-weighted completion is **61%**: 12 VERIFIED, 25 PARTIAL, and 3 MISSING 
 
 - `PILOT-002`: **OPEN** — critical success and rollback matrix is incomplete.
 - `PILOT-003`: **OPEN** — tax snapshot source exists, but full effective-date, receipt, finance, and historical proof is absent.
+
+## P4-002G update — 2026-08-02
+
+`functions/tests/historical-snapshots.test.mjs` now provides real callable emulator evidence that version-A product/category, variation, option, recipe, tax, payment, Finance, loyalty, inventory/COGS, receipt, and cashier-summary records remain unchanged after live configuration mutations. Historical snapshot immutability is now **PARTIAL** rather than missing: malformed/missing legacy snapshot read handling and independent historical UI-reader coverage remain open. PILOT-002 and PILOT-003 remain **OPEN**.

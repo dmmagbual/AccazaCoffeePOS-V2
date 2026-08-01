@@ -3,7 +3,7 @@ import { BranchAuthorizationRepository } from './authorization/index.js';
 import { CategoryRepository, OptionGroupRepository, OptionItemRepository, ProductOptionAssignmentRepository, ProductRepository, VariationRepository } from './catalog/index.js';
 import { PaymentMethodRepository } from './payments/index.js';
 import { RecipeRepository } from './recipes/index.js';
-import { FirestoreTrustedSaleRepository, salePersistenceStages } from './sales/completeSale.js';
+import { completeSaleRequestHash, FirestoreTrustedSaleRepository, salePersistenceStages } from './sales/completeSale.js';
 import { TrustedSaleInputResolver } from './sales/trustedSaleInputResolver.js';
 import { getAdminFirestore } from './shared/admin.js';
 import { correlationId, requestContext } from './shared/requestContext.js';
@@ -19,6 +19,24 @@ export const completeSale = onCall({ region: 'asia-southeast1' }, async (request
             throw new HttpsError('invalid-argument', 'A sale command is required.');
         const db = getAdminFirestore();
         const authorization = new BranchAuthorizationRepository(db);
+        authorization.validateUserOrganizationAccess(context, context.organizationId);
+        authorization.validateUserBranchAccess(context, data.requestedBranchId);
+        authorization.validatePermission(context, 'sales.complete');
+        await authorization.validateOrganizationActive(context.organizationId);
+        await authorization.validateBranchActive(context.organizationId, data.requestedBranchId);
+        if (!context.employeeId)
+            throw new HttpsError('failed-precondition', 'An employee context is required.');
+        await authorization.validateEmployeeActive(context.organizationId, context.employeeId);
+        await authorization.validateEmployeeBranchAssignment(context.organizationId, context.employeeId, data.requestedBranchId);
+        await authorization.validateOpenShiftAccess(context.organizationId, data.requestedBranchId, context.employeeId);
+        const replay = await db.collection('saleIdempotency').doc(`${context.organizationId}_${data.idempotencyKey}`).get();
+        if (replay.exists) {
+            const evidence = replay.data();
+            if (evidence.requestHash !== completeSaleRequestHash(data))
+                throw new HttpsError('already-exists', 'This idempotency key was used for a different request.');
+            if (evidence.status === 'COMPLETED' && evidence.resultSnapshot)
+                return evidence.resultSnapshot;
+        }
         const categories = new CategoryRepository(db);
         const products = new ProductRepository(db, categories);
         const variations = new VariationRepository(db);

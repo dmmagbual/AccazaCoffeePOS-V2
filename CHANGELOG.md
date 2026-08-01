@@ -1,5 +1,10 @@
 # Changelog
 
+## P4-002G — Historical Snapshot Immutability Audit
+
+- Added real callable emulator coverage for immutable sale, receipt, cashier-summary, payment, inventory/COGS, Finance, loyalty, audit, and outbox evidence after live master-data changes.
+- Completed idempotent retries now reuse committed results after trusted context validation and before mutable catalog resolution.
+
 All notable changes to the Accaza Business Platform will be documented in this file.
 
 The format is based on Keep a Changelog, and the project follows Semantic Versioning.
