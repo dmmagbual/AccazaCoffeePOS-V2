@@ -1,0 +1,7 @@
+export type MasterDomain = 'organization' | 'branch' | 'product' | 'ingredient' | 'recipe' | 'supplier' | 'customer' | 'employee' | 'account' | 'category'
+export interface MasterRecord { id: string; organizationId: string; code: string; displayName: string; status: 'active' | 'inactive' | 'merged' | 'deleted'; aliases: readonly string[]; tags: readonly string[]; searchKeywords: readonly string[]; mergedIntoId?: string; createdAt: Date; updatedAt: Date; createdBy: string; updatedBy: string }
+export interface ReferenceDataItem { id: string; domain: string; code: string; name: string; description?: string; active: boolean; sortOrder: number; organizationId: string | null }
+export interface DataDictionaryField { name: string; displayName: string; description: string; dataType: 'string' | 'number' | 'boolean' | 'date' | 'reference' | 'array'; nullable: boolean; defaultValue?: string; validation: string; businessMeaning: string; owningModule: string; referencedBy: readonly string[] }
+export interface HierarchicalCategory extends MasterRecord { parentCategoryId: string | null; hierarchyPath: string; level: number; sortOrder: number }
+export interface MasterSearchResult { domain: MasterDomain; id: string; code: string; displayName: string; matchedBy: 'name' | 'code' | 'alias' | 'keyword' }
+export interface ImportPreview<T> { valid: readonly T[]; invalid: readonly { row: number; reason: string }[]; duplicateCodes: readonly string[] }

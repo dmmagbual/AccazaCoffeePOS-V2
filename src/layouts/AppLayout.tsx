@@ -1,4 +1,4 @@
-import { BookOpenCheck, Building2, Database, LayoutDashboard, PackageCheck, Settings2, ShoppingCart, Store, Wheat } from 'lucide-react'
+import { ArrowLeftRight, BarChart3, BookOpenCheck, Building2, Database, Factory, Landmark, LayoutDashboard, PackageCheck, Settings2, SlidersHorizontal, ShoppingCart, Store, Users, Wheat } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { APP_CONFIG, ROUTES } from '../shared/config'
 
@@ -31,6 +31,12 @@ export function AppLayout() {
           <NavLink to={ROUTES.recipes} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><BookOpenCheck size={18} />Recipes</NavLink>
           <NavLink to={ROUTES.operations} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Store size={18} />Store operations</NavLink>
           <NavLink to={ROUTES.procurement} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><PackageCheck size={18} />Procurement</NavLink>
+          <NavLink to={ROUTES.production} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Factory size={18} />Production</NavLink>
+          <NavLink to={ROUTES.platformConfiguration} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><SlidersHorizontal size={18} />Platform configuration</NavLink>
+          <NavLink to={ROUTES.finance} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Landmark size={18} />Finance</NavLink>
+          <NavLink to={ROUTES.interBranchTransfers} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><ArrowLeftRight size={18} />Branch transfers</NavLink>
+          <NavLink to={ROUTES.crm} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><Users size={18} />Customers</NavLink>
+          <NavLink to={ROUTES.analytics} className={({ isActive }) => `mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-900 hover:text-white'}`}><BarChart3 size={18} />Analytics</NavLink>
         </nav>
       </aside>
       <section className="min-w-0 flex-1 lg:ml-64">

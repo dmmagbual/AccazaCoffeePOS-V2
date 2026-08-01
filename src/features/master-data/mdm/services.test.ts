@@ -1,0 +1,6 @@
+import { describe, expect, it } from 'vitest'
+import { findMasterDuplicates, previewImport, searchMasters, validateCategory } from '.'
+import type { HierarchicalCategory, MasterRecord } from './types'
+const now = new Date('2026-08-01T00:00:00.000Z')
+const record: MasterRecord = { id: '1', organizationId: 'org', code: 'ING-1', displayName: 'Evaporated Milk', status: 'active', aliases: ['EVM'], tags: [], searchKeywords: ['carnation'], createdAt: now, updatedAt: now, createdBy: 'u', updatedBy: 'u' }
+describe('MDM services', () => { it('finds aliases through unified search and detects duplicates', () => { expect(searchMasters('evm', { ingredient: [record], organization: [], branch: [], product: [], recipe: [], supplier: [], customer: [], employee: [], account: [], category: [] })[0]?.matchedBy).toBe('alias'); expect(findMasterDuplicates({ code: 'NEW', displayName: 'Milk', aliases: ['EVM'] }, [record])).toHaveLength(1) }); it('previews safe imports and prevents category cycles', () => { expect(previewImport([{ code: 'A' }, { code: 'A' }, { code: '' }], (row) => row.code !== '').duplicateCodes).toEqual(['A']); const category = { ...record, parentCategoryId: '1', hierarchyPath: '/food', level: 1, sortOrder: 0 } satisfies HierarchicalCategory; expect(() => validateCategory(category, [])).toThrow('own parent') }) })

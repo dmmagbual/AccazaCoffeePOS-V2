@@ -14,4 +14,10 @@ export const ROUTES = {
   recipes: '/recipes',
   operations: '/operations',
   procurement: '/procurement',
+  production: '/production',
+  platformConfiguration: '/platform-configuration',
+  finance: '/finance',
+  interBranchTransfers: '/inter-branch-transfers',
+  crm: '/crm',
+  analytics: '/analytics',
 } as const

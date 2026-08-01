@@ -1,0 +1,7 @@
+import { collection, doc, getDocs, query, setDoc, updateDoc, where, type DocumentData, type Firestore } from 'firebase/firestore'
+import { COLLECTIONS } from '../../../shared/config'
+import { documentConverter } from '../../../shared/firebase'
+import type { FeatureConfiguration, StorageLocation } from '../domain'
+import type { PlatformConfigurationRepositories, PlatformConfigurationRepository } from './interfaces'
+function repository<T extends DocumentData & { id: string }>(firestore: Firestore, collectionName: string): PlatformConfigurationRepository<T> { const reference = collection(firestore, collectionName).withConverter(documentConverter<T>()); return { async list(organizationId, branchId) { const constraints = branchId === undefined ? [where('organizationId', '==', organizationId)] : [where('organizationId', '==', organizationId), where('branchId', '==', branchId)]; const snapshots = await getDocs(query(reference, ...constraints)); return snapshots.docs.map((snapshot) => snapshot.data()) }, async create(document) { await setDoc(doc(reference, document.id), document); return document }, async update(id, updates) { await updateDoc(doc(reference, id), updates as DocumentData) } } }
+export function createPlatformConfigurationRepositories(firestore: Firestore): PlatformConfigurationRepositories { return { featureConfigurations: repository<FeatureConfiguration>(firestore, COLLECTIONS.featureConfigurations), storageLocations: repository<StorageLocation>(firestore, COLLECTIONS.storageLocations) } }

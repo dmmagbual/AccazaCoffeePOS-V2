@@ -1,1 +1,1 @@
-export type { FifoConsumption, FifoResult, GoodsReceipt, GoodsReceiptLine, InventoryBatch, InventoryBatchStatus, PaymentTerms, ProcurementDocument, PurchaseLine, PurchaseMethod, PurchaseOrder, PurchaseOrderStatus, Supplier } from './types'
+export type { ControlledBatchStatus, FifoConsumption, FifoResult, GoodsReceipt, GoodsReceiptLine, InventoryBatch, InventoryBatchStatus, PaymentTerms, ProcurementDocument, PurchaseLine, PurchaseMethod, PurchaseOrder, PurchaseOrderStatus, Supplier } from './types'
