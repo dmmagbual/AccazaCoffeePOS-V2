@@ -18,7 +18,49 @@ service cloud.firestore {
     match /{document=**} { allow read, write: if false; }
 
     // Centrally governed master data.
-    match /{collection=recipes|productionRecipes|productionRecipeVersions|unitsOfMeasure|productCategories|ingredientCategories|taxRates|paymentMethods|appSettings}/{id} {
+    match /recipes/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /productionRecipes/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /productionRecipeVersions/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /unitsOfMeasure/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /ingredientCategories/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /taxRates/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /paymentMethods/{id} {
+      allow read: if orgScope(resource.data);
+      allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /appSettings/{id} {
       allow read: if orgScope(resource.data);
       allow create: if orgScope(request.resource.data) && can('master_data.manage') && actorCreates(request.resource.data);
       allow update: if orgScope(resource.data) && orgScope(request.resource.data) && can('master_data.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
@@ -45,19 +87,102 @@ service cloud.firestore {
     }
 
     // Store/branch master records are readable in scope and role-managed.
-    match /{collection=inventoryItems|suppliers|purchaseOrders|goodsReceipts|inventoryBatches|purchaseDocuments|storageLocations}/{id} {
+    match /inventoryItems/{id} {
       allow read: if storeScope(resource.data);
       allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
       allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if false;
     }
-    match /{collection=products|productCategories|productVariations|optionGroups|optionItems|productOptionAssignments|productAvailability|posMenuLayouts}/{id} {
+    match /suppliers/{id} {
+      allow read: if storeScope(resource.data);
+      allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
+      allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /purchaseOrders/{id} {
+      allow read: if storeScope(resource.data);
+      allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
+      allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /goodsReceipts/{id} {
+      allow read: if storeScope(resource.data);
+      allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
+      allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /inventoryBatches/{id} {
+      allow read: if storeScope(resource.data);
+      allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
+      allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /purchaseDocuments/{id} {
+      allow read: if storeScope(resource.data);
+      allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
+      allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /storageLocations/{id} {
+      allow read: if storeScope(resource.data);
+      allow create: if storeScope(request.resource.data) && can('procurement.manage') && actorCreates(request.resource.data);
+      allow update: if storeScope(resource.data) && storeScope(request.resource.data) && can('procurement.manage') && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /products/{id} {
       allow read: if orgScope(resource.data) && can('catalog.view');
       allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
       allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
       allow delete: if false;
     }
-    match /{collection=customers|loyaltyAccounts}/{id} {
+    match /productCategories/{id} {
+      allow read: if orgScope(resource.data) && can('catalog.view');
+      allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow delete: if false;
+    }
+    match /productVariations/{id} {
+      allow read: if orgScope(resource.data) && can('catalog.view');
+      allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow delete: if false;
+    }
+    match /optionGroups/{id} {
+      allow read: if orgScope(resource.data) && can('catalog.view');
+      allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow delete: if false;
+    }
+    match /optionItems/{id} {
+      allow read: if orgScope(resource.data) && can('catalog.view');
+      allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow delete: if false;
+    }
+    match /productOptionAssignments/{id} {
+      allow read: if orgScope(resource.data) && can('catalog.view');
+      allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow delete: if false;
+    }
+    match /productAvailability/{id} {
+      allow read: if orgScope(resource.data) && can('catalog.view');
+      allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow delete: if false;
+    }
+    match /posMenuLayouts/{id} {
+      allow read: if orgScope(resource.data) && can('catalog.view');
+      allow create: if orgScope(request.resource.data) && actorCreates(request.resource.data) && (can('catalog.createProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow update: if orgScope(resource.data) && orgScope(request.resource.data) && immutableAudit(resource.data, request.resource.data) && request.resource.data.updatedBy == request.auth.uid && (can('catalog.editProduct') || can('catalog.manageCategories') || can('catalog.manageVariations') || can('catalog.manageOptionGroups') || can('catalog.manageOptionItems') || can('catalog.manageAvailability') || can('catalog.managePOSLayout'));
+      allow delete: if false;
+    }
+    match /customers/{id} {
+      allow read: if storeScope(resource.data) && can('customers.read');
+      allow create, update: if storeScope(request.resource.data) && can('customers.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /loyaltyAccounts/{id} {
       allow read: if storeScope(resource.data) && can('customers.read');
       allow create, update: if storeScope(request.resource.data) && can('customers.manage') && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if false;
@@ -66,7 +191,115 @@ service cloud.firestore {
     // Financial, inventory, audit, and workflow evidence is service-account only.
     // Admin SDK and trusted server commands bypass these rules; browser clients
     // cannot forge ledgers, stock movements, approvals, or history.
-    match /{collection=orders|orderItems|payments|receipts|shifts|cashDrawers|expenses|stockMovements|inventoryLocationMovements|inventoryReservations|supplierInvoices|accountsPayable|supplierPayments|supplierPaymentAllocations|journalEntries|journalLines|financeExpenses|cashTransfers|productionOrders|productionOutputs|productionBatches|productionWaste|productionCosts|auditLogs|workflowInstances|workflowHistory|approvalRequests|maintenanceWorkOrders}/{id} {
+    match /orders/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /orderItems/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /payments/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /receipts/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /shifts/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /cashDrawers/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /expenses/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /stockMovements/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /inventoryLocationMovements/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /inventoryReservations/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /supplierInvoices/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /accountsPayable/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /supplierPayments/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /supplierPaymentAllocations/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /journalEntries/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /journalLines/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /financeExpenses/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /cashTransfers/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /productionOrders/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /productionOutputs/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /productionBatches/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /productionWaste/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /productionCosts/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /auditLogs/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /workflowInstances/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /workflowHistory/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /approvalRequests/{id} {
+      allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
+      allow write: if false;
+    }
+    match /maintenanceWorkOrders/{id} {
       allow read: if (storeScope(resource.data) || branchScope(resource.data)) && can('operations.read');
       allow write: if false;
     }
@@ -76,15 +309,61 @@ service cloud.firestore {
     }
 
     // Identity and confidential personnel data require dedicated permissions.
-    match /{collection=users|roles|permissions}/{id} {
+    match /users/{id} {
       allow read, write: if can('identity.manage');
     }
-    match /{collection=people|employees|employeeBranchAssignments|attendanceEvents|employeeSkills|trainingRecords}/{id} {
+    match /roles/{id} {
+      allow read, write: if can('identity.manage');
+    }
+    match /permissions/{id} {
+      allow read, write: if can('identity.manage');
+    }
+    match /people/{id} {
       allow read: if orgScope(resource.data) && can('hr.confidential.read');
       allow create, update: if orgScope(request.resource.data) && can('hr.confidential.manage') && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if false;
     }
-    match /{collection=franchiseOrganizations|franchiseAgreements|royaltyRules|royaltyCalculations}/{id} {
+    match /employees/{id} {
+      allow read: if orgScope(resource.data) && can('hr.confidential.read');
+      allow create, update: if orgScope(request.resource.data) && can('hr.confidential.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /employeeBranchAssignments/{id} {
+      allow read: if orgScope(resource.data) && can('hr.confidential.read');
+      allow create, update: if orgScope(request.resource.data) && can('hr.confidential.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /attendanceEvents/{id} {
+      allow read: if orgScope(resource.data) && can('hr.confidential.read');
+      allow create, update: if orgScope(request.resource.data) && can('hr.confidential.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /employeeSkills/{id} {
+      allow read: if orgScope(resource.data) && can('hr.confidential.read');
+      allow create, update: if orgScope(request.resource.data) && can('hr.confidential.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /trainingRecords/{id} {
+      allow read: if orgScope(resource.data) && can('hr.confidential.read');
+      allow create, update: if orgScope(request.resource.data) && can('hr.confidential.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /franchiseOrganizations/{id} {
+      allow read: if orgScope(resource.data) && can('franchise.read');
+      allow create, update: if orgScope(request.resource.data) && can('franchise.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /franchiseAgreements/{id} {
+      allow read: if orgScope(resource.data) && can('franchise.read');
+      allow create, update: if orgScope(request.resource.data) && can('franchise.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /royaltyRules/{id} {
+      allow read: if orgScope(resource.data) && can('franchise.read');
+      allow create, update: if orgScope(request.resource.data) && can('franchise.manage') && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+    match /royaltyCalculations/{id} {
       allow read: if orgScope(resource.data) && can('franchise.read');
       allow create, update: if orgScope(request.resource.data) && can('franchise.manage') && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if false;
