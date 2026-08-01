@@ -14,6 +14,10 @@ validate the organization, first branch, master-data seeds, features, chart, and
 owner details. Persisting this plan to Firebase is deferred to the trusted setup
 command required by the P2 security boundary.
 
+Product catalog configuration is organization-owned, with optional branch
+availability and effective-dated pricing. Recipe costing and inventory consumption
+remain centralized in their existing engines.
+
 To build the most beautiful, fastest, and easiest-to-use Coffee Shop POS for independent cafés.
 
 This system should help owners manage their business, help staff work efficiently, and provide customers with an outstanding experience.

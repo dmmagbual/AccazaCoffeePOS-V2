@@ -131,3 +131,10 @@ Business document numbers are readable, stable, collision-resistant, and store a
 - A Recipe Trial named “Spanish Latte — Reduced Sweetness Test” consumes actual ingredients and stores its result independently of production recipes.
 - A Staff Consumption record stores both the standard latte recipe and the actual added syrup or milk substitution.
 - A Stock Adjustment creates an explicit reconciliation movement; it never edits the prior consumption record.
+# Product catalog rules
+
+- Product codes are immutable and never reused.
+- Referenced categories and products are deactivated, never deleted.
+- Active variations require one default variation.
+- Price changes are effective-dated records; historical sales retain snapshots.
+- Product catalog services do not calculate recipe cost or deduct inventory.

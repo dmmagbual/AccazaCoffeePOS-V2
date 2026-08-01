@@ -3,6 +3,7 @@ import { AppLayout } from '../../layouts/AppLayout'
 import { ROUTES } from '../config'
 
 export const router = createBrowserRouter([
+  { path: ROUTES.catalog, lazy: async () => ({ Component: (await import('../../features/catalog')).ProductCatalogPage }) },
   { path: ROUTES.settings, lazy: async () => ({ Component: (await import('../../features/settings')).SettingsPage }) },
   { path: ROUTES.businessSetup, lazy: async () => ({ Component: (await import('../../features/business-setup')).BusinessSetupPage }) },
   {

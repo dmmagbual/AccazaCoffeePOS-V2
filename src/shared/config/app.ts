@@ -6,6 +6,7 @@ export const APP_CONFIG = {
 } as const
 
 export const ROUTES = {
+  catalog: '/catalog',
   settings: '/settings',
   businessSetup: '/setup',
   dashboard: '/',

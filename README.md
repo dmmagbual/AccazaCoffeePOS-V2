@@ -26,3 +26,6 @@ command described in `docs/BUSINESS_SETUP_WIZARD.md`.
 
 Permanent configuration is organized at `/settings` into Business, Products &
 Recipes, Inventory, Finance, People & Access, and System.
+
+The catalog domain documents product hierarchy, variations, pricing, modifiers,
+add-ons, combos, availability, and POS layout rules in `docs/MENU_AND_PRODUCT_CATALOG.md`.
